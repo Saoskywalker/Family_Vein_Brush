@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.encoding": "gb2312",
+		"files.exclude": {
+			"**/Debug": true,
+			"**/settings": true
+		},
+		"files.autoSave": "afterDelay",
+		"files.autoSaveDelay": 30000,
+		"files.associations": {
+			"mpuiic.h": "c"
+		}
+	}
+}
