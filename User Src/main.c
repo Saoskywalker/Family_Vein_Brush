@@ -17,24 +17,29 @@ History:
 
 /* Private function prototypes -----------------------------------------------*/
 
+
 void main(void)
 {  
   //Init clock, CPU and Master clock is 16MHz
   CLK_HSICmd(ENABLE);
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
   
-  Uart1Init(19200);
-  delay_init();
+  //io init
+  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_FAST);
+  GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_OUT_PP_LOW_SLOW);
+  GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_OUT_PP_LOW_SLOW);
+   // GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT);
+  
+  // GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_SLOW);
+
+  Uart1Init(115200);
 // Tim1_Time_Upmode_conf(16, 1000, 0);
   //Timer4Init();       //Count 200us
- // Tim2_Time_Upmode_conf(4, 1000);        //f: 1us, 250us Int
+  Tim2_Time_Upmode_conf(4, 1000);        //f: 1us, 1ms Int
   enableInterrupts();//Open main interrupt
-  
-  //Init GPIO
-  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_FAST);
-  GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT);
-  GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT);
-  GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT);
+
+  delay_init();
+  TIM1_PWM_Init(0, 8000, 0);
   
 #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
@@ -47,8 +52,8 @@ void main(void)
 #endif
 
 #ifdef DEBUG     
-   // usart1_send_char(0xaa);
-    GPIOA_OUT->ODR3 = ~ GPIOA_OUT->ODR3;
+  //  usart1_send_char(0xaa);
+    //GPIOA_OUT->ODR3 = ~ GPIOA_OUT->ODR3;
 #endif 
 
     delay_ms(100);

@@ -12,12 +12,12 @@
           
           
           
-        <Column0>213</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+        <Column0>220</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
       </Workspace>
     <Build><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>975</ColumnWidth1><ColumnWidth2>260</ColumnWidth2><ColumnWidth3>65</ColumnWidth3></Build><TerminalIO/><Select-Ambiguous-Definitions><ColumnWidth0>468</ColumnWidth0><ColumnWidth1>66</ColumnWidth1><ColumnWidth2>802</ColumnWidth2></Select-Ambiguous-Definitions><Find-in-Files><ColumnWidth0>401</ColumnWidth0><ColumnWidth1>66</ColumnWidth1><ColumnWidth2>602</ColumnWidth2><ColumnWidth3>267</ColumnWidth3></Find-in-Files><Debug-Log><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1301</ColumnWidth1></Debug-Log><Find-All-References><ColumnWidth0>468</ColumnWidth0><ColumnWidth1>66</ColumnWidth1><ColumnWidth2>802</ColumnWidth2></Find-All-References><SourceBrowser/></Static>
     <Windows>
       
-    <Wnd0>
+    <Wnd2>
         <Tabs>
           <Tab>
             <Identity>TabID-14862-4956</Identity>
@@ -29,20 +29,20 @@
           </Tab>
         <Tab><Identity>TabID-4199-7654</Identity><TabName>Source Browser</TabName><Factory>SourceBrowser</Factory><Session><TypeFilter>2147483647</TypeFilter><FileFilter>1</FileFilter></Session></Tab></Tabs>
         
-      <SelectedTab>0</SelectedTab></Wnd0><Wnd1><Tabs><Tab><Identity>TabID-8317-6716</Identity><TabName>Build</TabName><Factory>Build</Factory><Session/></Tab><Tab><Identity>TabID-10331-12596</Identity><TabName>Ambiguous Definitions</TabName><Factory>Select-Ambiguous-Definitions</Factory><Session/></Tab><Tab><Identity>TabID-27934-25444</Identity><TabName>Breakpoints</TabName><Factory>Breakpoints</Factory></Tab><Tab><Identity>TabID-2352-11867</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab><Tab><Identity>TabID-15616-21016</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab><Tab><Identity>TabID-5245-7634</Identity><TabName>References</TabName><Factory>Find-All-References</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd1></Windows>
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd3><Tabs><Tab><Identity>TabID-8317-6716</Identity><TabName>Build</TabName><Factory>Build</Factory><Session/></Tab><Tab><Identity>TabID-10331-12596</Identity><TabName>Ambiguous Definitions</TabName><Factory>Select-Ambiguous-Definitions</Factory><Session/></Tab><Tab><Identity>TabID-27934-25444</Identity><TabName>Breakpoints</TabName><Factory>Breakpoints</Factory></Tab><Tab><Identity>TabID-2352-11867</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab><Tab><Identity>TabID-15616-21016</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab><Tab><Identity>TabID-5245-7634</Identity><TabName>References</TabName><Factory>Find-All-References</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd3></Windows>
     <Editor>
       
       
       
       
-    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\User Src\main.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>16</YPos2><SelStart2>669</SelStart2><SelEnd2>669</SelEnd2></Tab><ActiveTab>0</ActiveTab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\User Src\main.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>17</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><ActiveTab>0</ActiveTab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
     <Positions>
       
       
       
       
       
-    <Top><Row0><Sizes><Toolbar-04a82058><key>iaridepm.enu1</key></Toolbar-04a82058></Sizes></Row0><Row1><Sizes/></Row1><Row2><Sizes/></Row2></Top><Left><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>298</Bottom><Right>304</Right><x>-2</x><y>-2</y><xscreen>20</xscreen><yscreen>62</yscreen><sizeHorzCX>23015</sizeHorzCX><sizeHorzCY>126789</sizeHorzCY><sizeVertCX>352129</sizeVertCX><sizeVertCY>613497</sizeVertCY></Rect></Wnd0></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>146</Bottom><Right>871</Right><x>-2</x><y>-2</y><xscreen>873</xscreen><yscreen>148</yscreen><sizeHorzCX>1004603</sizeHorzCX><sizeHorzCY>302658</sizeHorzCY><sizeVertCX>23015</sizeVertCX><sizeVertCY>126789</sizeVertCY></Rect></Wnd1></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+    <Top><Row0><Sizes><Toolbar-04e92058><key>iaridepm.enu1</key></Toolbar-04e92058></Sizes></Row0><Row1><Sizes/></Row1><Row2><Sizes/></Row2></Top><Left><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>303</Bottom><Right>311</Right><x>-2</x><y>-2</y><xscreen>31</xscreen><yscreen>87</yscreen><sizeHorzCX>35673</sizeHorzCX><sizeHorzCY>177914</sizeHorzCY><sizeVertCX>360184</sizeVertCX><sizeVertCY>623722</sizeVertCY></Rect></Wnd2></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>141</Bottom><Right>871</Right><x>-2</x><y>-2</y><xscreen>873</xscreen><yscreen>143</yscreen><sizeHorzCX>1004603</sizeHorzCX><sizeHorzCY>292434</sizeHorzCY><sizeVertCX>35673</sizeVertCX><sizeVertCY>177914</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
   </Desktop>
 </Workspace>
 

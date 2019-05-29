@@ -72,7 +72,7 @@ extern u8 SendBufLen;
 extern u8 *SendBuffer;
 extern u8 UART1BusyFlag;
 
-void Uart1Init(u16 baud);
+void Uart1Init(u32 baud);
 volatile void Delay(uint16_t nCount);
 void Timer4Init(void);
 void UART1SendBuf(u8 *SendBufAddr, u8 SendLen);
@@ -81,6 +81,7 @@ void Tim2_Time_Upmode_conf(uint8_t TIM2_Prescaler,uint16_t TIM2_Period);
 void Tim1_Time_Upmode_conf(uint16_t TIM1_Prescaler,
                            uint16_t TIM1_Period,
                            uint8_t TIM1_RepetitionCounter);
+void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules);
 
 //App define
 #define LED_CON GPIOA_OUT->ODR3

@@ -56,7 +56,25 @@ void Tim1_Time_Upmode_conf(uint16_t TIM1_Prescaler,
   TIM1->CR1 |= 0x01;
 }
 
-void Uart1Init(u16 baud) 
+void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules)
+{
+  //timer1 ch3: PC3 ch4: PC4
+  TIM1_DeInit();
+  TIM1_TimeBaseInit(TIM1_Prescaler, TIM1_COUNTERMODE_UP, TIM1_Period, 0x00); 
+  TIM1_OC4Init(TIM1_OCMODE_PWM2, TIM1_OUTPUTSTATE_ENABLE, pules, 
+                TIM1_OCPOLARITY_LOW, TIM1_OCIDLESTATE_RESET);
+  TIM1_OC3Init(TIM1_OCMODE_PWM2, TIM1_OUTPUTSTATE_DISABLE, TIM1_OUTPUTNSTATE_DISABLE, 
+              TIM1_Period, TIM1_OCPOLARITY_LOW, TIM1_OCNPOLARITY_HIGH,
+               TIM1_OCIDLESTATE_RESET, TIM1_OCNIDLESTATE_SET);
+  TIM1_CCxCmd(TIM1_CHANNEL_4, ENABLE);
+  TIM1_CCxCmd(TIM1_CHANNEL_3, ENABLE);
+  TIM1_OC4PreloadConfig(ENABLE);
+  TIM1_OC3PreloadConfig(ENABLE);
+  TIM1_CtrlPWMOutputs(ENABLE);
+  TIM1_Cmd(ENABLE);
+}
+
+void Uart1Init(u32 baud) 
 {
   UART1_DeInit();
   GPIO_Init(GPIOD, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_FAST);  // PD3 = RD/DE

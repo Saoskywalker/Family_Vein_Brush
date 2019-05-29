@@ -288,7 +288,7 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
    {
 //     Flag1msCnt = 0;
  //    FlagTime.ms1 = 1;
-     GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
+    //  GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
    }  
     TIM2->SR1 = (uint8_t)(~TIM2_IT_UPDATE);
  }
@@ -373,7 +373,8 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
    if(UART1_GetITStatus(UART1_IT_RXNE))
    {
      UART1_ClearITPendingBit(UART1_IT_RXNE);
-     commRx2Handler(UART1_ReceiveData8());
+    //  commRx2Handler(UART1_ReceiveData8());
+    //  GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
    }	
  }
 #endif /* (STM8S208) || (STM8S207) || (STM8S103) || (STM8S903) || (STM8AF62Ax) || (STM8AF52Ax) */

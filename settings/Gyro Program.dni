@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1996069642
+Checksum=-1144510557
 [CallStack]
 ShowArgs=0
 [Disassembly]
@@ -59,6 +59,15 @@ LogEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
 ShowTimeSum=1
+[Breakpoints]
+Bp0=_ "STD_CODE" "{$PROJ_DIR$}.47.3" 0 0 0 0 "" 0 ""
+Bp1=_ "STD_CODE" "{$PROJ_DIR$}.47.3" 0 0 0 0 "" 0 ""
+Bp2=_ "STD_CODE" "{$PROJ_DIR$\User Src}.51.1" 0 0 0 0 "" 0 ""
+Bp3=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.86.1" 0 0 0 0 "" 0 ""
+Bp4=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.86.1" 0 0 0 0 "" 0 ""
+Bp5=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.86.1" 0 0 0 0 "" 0 ""
+Bp6=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.86.1" 0 0 0 0 "" 0 ""
+Count=7
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -66,17 +75,12 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Breakpoints]
-Bp0=_ "STD_CODE" "{$PROJ_DIR$\Library\delay\delay.c}.47.3" 0 0 0 0 "" 0 ""
-Bp1=_ "STD_CODE" "{$PROJ_DIR$\Library\delay\delay.c}.47.3" 0 0 0 0 "" 0 ""
-Bp2=_ "STD_CODE" "{$PROJ_DIR$\ST Src\stm8s_it.c}.51.1" 0 0 0 0 "" 0 ""
-Bp3=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.81.1" 0 0 0 0 "" 0 ""
-Bp4=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.81.1" 0 0 0 0 "" 0 ""
-Bp5=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.81.1" 0 0 0 0 "" 0 ""
-Bp6=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.81.1" 0 0 0 0 "" 0 ""
-Count=7
 [Aliases]
-A0=_ "D:\Aysi\Projects\Gyro Program\Library\MPU6050\mpu6050.c" ""
-A1=_ "D:\Aysi\Projects\Gyro Program\User Src\main.c" ""
-Count=2
+A0=_ "D:\Aysi\Projects\Gyro Program Beta\Library\delay\delay.c" ""
+A1=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_tim1.c" ""
+A2=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_tim4.c" ""
+A3=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_uart1.c" ""
+A4=_ "D:\Aysi\Projects\Gyro Program\Library\MPU6050\mpu6050.c" ""
+A5=_ "D:\Aysi\Projects\Gyro Program\User Src\main.c" ""
+Count=6
 SuppressDialog=0
