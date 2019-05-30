@@ -68,6 +68,7 @@ typedef struct
 //}_TimeBit;
 //
 //extern _TimeBit FlagTime;
+
 extern u8 SendBufLen;
 extern u8 *SendBuffer;
 extern u8 UART1BusyFlag;
@@ -82,6 +83,7 @@ void Tim1_Time_Upmode_conf(uint16_t TIM1_Prescaler,
                            uint16_t TIM1_Period,
                            uint8_t TIM1_RepetitionCounter);
 void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules);
+void AD1Init(void);
 
 //App define
 #define LED_CON GPIOA_OUT->ODR3

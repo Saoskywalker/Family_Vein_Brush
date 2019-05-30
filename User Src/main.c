@@ -12,12 +12,11 @@ History:
 #include "UserBaseLib.h"
 #include "delay.h"
 #include "UART_Frame.h"
+#include "TM1650.h"
 
 /* Private defines -----------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
-
-
 void main(void)
 {  
   //Init clock, CPU and Master clock is 16MHz
@@ -40,7 +39,11 @@ void main(void)
 
   delay_init();
   TIM1_PWM_Init(0, 8000, 0);
-  
+  AD1Init();
+  TM1650_Init();
+
+ // ADC1_StartConversion();
+
 #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
 #endif
@@ -51,12 +54,14 @@ void main(void)
     IWDG->KR = 0xAA;  //Clear IWDG cnt
 #endif
 
-#ifdef DEBUG     
+#ifdef DEBUG
+
+
   //  usart1_send_char(0xaa);
     //GPIOA_OUT->ODR3 = ~ GPIOA_OUT->ODR3;
 #endif 
 
-    delay_ms(100);
+    delay_ms(500);
   } 
 }
 

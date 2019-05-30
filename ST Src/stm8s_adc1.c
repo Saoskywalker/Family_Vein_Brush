@@ -388,7 +388,7 @@ uint16_t ADC1_GetConversionValue(void)
     /* Then read LSB */
     templ = ADC1->DRL;
     
-    temph = (uint16_t)((uint16_t)((uint16_t)templ << 6) | (uint16_t)((uint16_t)temph << 8));
+    temph = (uint16_t)templ | (temph << 2);
   }
   
   return ((uint16_t)temph);

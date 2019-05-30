@@ -13,7 +13,9 @@
 		"files.autoSave": "afterDelay",
 		"files.autoSaveDelay": 30000,
 		"files.associations": {
-			"mpuiic.h": "c"
+			"mpuiic.h": "c",
+			"userbaselib.h": "c",
+			"stm8s.h": "c"
 		}
 	}
 }

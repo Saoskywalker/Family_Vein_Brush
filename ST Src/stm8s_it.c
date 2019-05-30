@@ -288,7 +288,7 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
    {
 //     Flag1msCnt = 0;
  //    FlagTime.ms1 = 1;
-    //  GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
+     GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
    }  
     TIM2->SR1 = (uint8_t)(~TIM2_IT_UPDATE);
  }
@@ -489,12 +489,21 @@ INTERRUPT_HANDLER(I2C_IRQHandler, 19)
   * @retval 
   * None
   */
- INTERRUPT_HANDLER(ADC1_IRQHandler, 22)
- {
-    /* In order to detect unexpected events during development,
+INTERRUPT_HANDLER(ADC1_IRQHandler, 22)
+{
+  /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
- }
+  if (ADC1->CSR&0X80) //check EOC flag
+  {
+    ADC1->CSR &= ~(1<<7); //clear EOC flag
+    ADC1_GetConversionValue();
+    // usart1_send_char(advalue >> 8);
+    // usart1_send_char((u8)advalue);
+    //ADC1->CR1 |= ADC1_CR1_ADON; //start adc convert
+    // GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
+  }
+}
 #endif /* (STM8S208) || (STM8S207) || (STM8AF52Ax) || (STM8AF62Ax) */
 
 #if defined (STM8S903) || defined (STM8AF622x)

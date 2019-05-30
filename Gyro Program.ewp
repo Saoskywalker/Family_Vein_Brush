@@ -61,7 +61,7 @@
         </option>
         <option>
           <name>GenRTConfigPath</name>
-          <state>$TOOLKIT_DIR$\LIB\</state>
+          <state>$TOOLKIT_DIR$\LIB\dlstm8smf.h</state>
         </option>
         <option>
           <name>GenLibInFormatter</name>
@@ -251,7 +251,7 @@
           <state>$PROJ_DIR$\User Inc</state>
           <state>$PROJ_DIR$\ST Inc</state>
           <state>$PROJ_DIR$\Library\delay</state>
-          <state>$PROJ_DIR$\Library\MPU6050</state>
+          <state>$PROJ_DIR$\Library\TM1650</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -1580,17 +1580,20 @@
       </file>
     </group>
     <group>
-      <name>MPU6050</name>
+      <name>TM1650</name>
       <file>
-        <name>$PROJ_DIR$\Library\MPU6050\mpu6050.c</name>
+        <name>$PROJ_DIR$\Library\TM1650\TM1650.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\Library\MPU6050\mpuiic.c</name>
+        <name>$PROJ_DIR$\Library\TM1650\TM1650.h</name>
       </file>
     </group>
   </group>
   <group>
     <name>ST Src</name>
+    <file>
+      <name>$PROJ_DIR$\ST Src\stm8s_adc1.c</name>
+    </file>
     <file>
       <name>$PROJ_DIR$\ST Src\stm8s_clk.c</name>
     </file>

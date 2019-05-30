@@ -5,6 +5,7 @@ Date: 2017.11.23
 ************************************************************************/
 
 #include "UserBaseLib.h"
+#include "delay.h"
 
 u8 SendBufLen = 0;
 u8 *SendBuffer = 0;
@@ -59,12 +60,15 @@ void Tim1_Time_Upmode_conf(uint16_t TIM1_Prescaler,
 void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules)
 {
   //timer1 ch3: PC3 ch4: PC4
+  GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_OUT_PP_HIGH_SLOW);
+  GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_OUT_PP_LOW_SLOW);
+
   TIM1_DeInit();
   TIM1_TimeBaseInit(TIM1_Prescaler, TIM1_COUNTERMODE_UP, TIM1_Period, 0x00); 
   TIM1_OC4Init(TIM1_OCMODE_PWM2, TIM1_OUTPUTSTATE_ENABLE, pules, 
                 TIM1_OCPOLARITY_LOW, TIM1_OCIDLESTATE_RESET);
   TIM1_OC3Init(TIM1_OCMODE_PWM2, TIM1_OUTPUTSTATE_DISABLE, TIM1_OUTPUTNSTATE_DISABLE, 
-              TIM1_Period, TIM1_OCPOLARITY_LOW, TIM1_OCNPOLARITY_HIGH,
+              TIM1_Period+1, TIM1_OCPOLARITY_LOW, TIM1_OCNPOLARITY_HIGH,
                TIM1_OCIDLESTATE_RESET, TIM1_OCNIDLESTATE_SET);
   TIM1_CCxCmd(TIM1_CHANNEL_4, ENABLE);
   TIM1_CCxCmd(TIM1_CHANNEL_3, ENABLE);
@@ -72,6 +76,19 @@ void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules
   TIM1_OC3PreloadConfig(ENABLE);
   TIM1_CtrlPWMOutputs(ENABLE);
   TIM1_Cmd(ENABLE);
+}
+
+void AD1Init(void)
+{
+  GPIO_Init(GPIOD, GPIO_PIN_3, GPIO_MODE_IN_FL_NO_IT);  //Set float input
+  ADC1_DeInit();  //reset ADC
+  //mode; channel; prescale; trigger & switch; align way; schmitt channel & switch
+  ADC1_Init(ADC1_CONVERSIONMODE_SINGLE, ADC1_CHANNEL_4, ADC1_PRESSEL_FCPU_D8,
+            ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_LEFT,
+            ADC1_SCHMITTTRIG_CHANNEL4, DISABLE);
+  // ADC1_ITConfig(ADC1_IT_EOCIE, ENABLE); //open int
+  // ADC1_Cmd(ENABLE);
+  delay_ms(10); //wait ADC ready
 }
 
 void Uart1Init(u32 baud) 
