@@ -143,7 +143,7 @@
         <option>
           <name>IccOptStrategy</name>
           <version>0</version>
-          <state>2</state>
+          <state>1</state>
         </option>
         <option>
           <name>IccOptLevelSlave</name>
@@ -152,7 +152,7 @@
         <option>
           <name>IccOptAllowList</name>
           <version>0</version>
-          <state>111110</state>
+          <state>111111</state>
         </option>
         <option>
           <name>IccGenerateDebugInfo</name>
@@ -1596,9 +1596,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\ST Src\stm8s_clk.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\ST Src\stm8s_exti.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\ST Src\stm8s_flash.c</name>

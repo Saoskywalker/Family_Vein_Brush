@@ -8,6 +8,7 @@ Date: 2017.11.23
 #define _User_Base_Lib_H
 
 #include "stm8s.h"
+#include "TM1650.h"
 
 #define BIT_CLEAR(dv,db) (dv &= (~(1<<db)))
 #define BIT_SET(dv,db) (dv |= (1<<db))
@@ -55,19 +56,18 @@ typedef struct
 #define GPIOC_IN ((_GPIO_IDR_BIT *) GPIOC_BaseAddress+1)
 #define GPIOD_IN ((_GPIO_IDR_BIT *) GPIOD_BaseAddress+1)
 
-//typedef struct
-//{
-//  unsigned char ms1        : 1;
-//  unsigned char ms2        : 1;
-//  unsigned char ms3        : 1;
-//  unsigned char ms4        : 1;
-//  unsigned char ms5        : 1;
-//  unsigned char ms6        : 1;
-//  unsigned char ms7        : 1;
-//  unsigned char ms8        : 1;
-//}_TimeBit;
-//
-//extern _TimeBit FlagTime;
+typedef struct
+{
+ unsigned char ms1        : 1;
+ unsigned char ms2        : 1;
+ unsigned char ms3        : 1;
+ unsigned char ms4        : 1;
+ unsigned char ms5        : 1;
+ unsigned char ms6        : 1;
+ unsigned char error      : 1;
+ unsigned char work       : 1;
+}_StateBit;
+extern _StateBit FlagState;
 
 extern u8 SendBufLen;
 extern u8 *SendBuffer;
@@ -86,7 +86,8 @@ void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules
 void AD1Init(void);
 
 //App define
-#define LED_CON GPIOA_OUT->ODR3
+#define HEAT_PIN GPIOC_OUT->ODR6
+#define LED_CON GPIOC_OUT->ODR5
 #define LED_CON_CLOSE 0
 #define LED_CON_OPEN 1
 #define REC_SEND_485 GPIOD_OUT->ODR3
@@ -100,6 +101,25 @@ extern u32 EECountTemp;
 //App Function
 u32 EEPROMRestartDeal();
 void EEPROMStorage(u32 *EECount);
+
+//SMG display
+#define DIG1 (u8)0X68
+#define DIG2 (u8)0X6A
+#define DIG3 (u8)0X6C
+#define DIG4 (u8)0X6E
+
+#define SMG_One_Display(ch, i) TM1650_Display(ch, i);
+
+//Key get
+#define KEY_TEMP 0X47
+#define KEY_START 0X4F
+#define KEY_BIO 0X57
+
+#define Key_Get() TM1650_Key();
+
+extern u8 TempIntensity;
+void BIO1PWM(u8 i, u8 Work);
+void HeatPWM(u8 i, u8 Work);
 
 #endif
 

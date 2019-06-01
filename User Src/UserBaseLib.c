@@ -10,7 +10,7 @@ Date: 2017.11.23
 u8 SendBufLen = 0;
 u8 *SendBuffer = 0;
 u8 UART1BusyFlag = 0;
-//_TimeBit FlagTime = {0, 0, 0, 0, 0, 0, 0, 0};
+_StateBit FlagState = {0, 0, 0, 0, 0, 0, 0, 0};
 
 //IAR STM8S Function
 void Timer4Init(void)//Count 200us
@@ -65,6 +65,7 @@ void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules
 
   TIM1_DeInit();
   TIM1_TimeBaseInit(TIM1_Prescaler, TIM1_COUNTERMODE_UP, TIM1_Period, 0x00); 
+  TIM1_ARRPreloadConfig(ENABLE);
   TIM1_OC4Init(TIM1_OCMODE_PWM2, TIM1_OUTPUTSTATE_ENABLE, pules, 
                 TIM1_OCPOLARITY_LOW, TIM1_OCIDLESTATE_RESET);
   TIM1_OC3Init(TIM1_OCMODE_PWM2, TIM1_OUTPUTSTATE_DISABLE, TIM1_OUTPUTNSTATE_DISABLE, 
@@ -238,3 +239,4 @@ void EEPROMStorage(u32 *EECount)
     FLASH_Lock(FLASH_MEMTYPE_DATA);
   }
 }
+
