@@ -21,9 +21,9 @@ History:
 
 //BIO1 PWM
 const u16 BIO1IntensityTable[] = {8001, 7200, 7000, 6200, 6000,
-																	5800, 5600, 5400, 5200};
-const u16 BIO1ModPeriod[] = {167, 250, 400};
-const u16 BIO1ModCompare[] = {84, 140, 240};	
+																	5000, 4000, 3000, 2000};
+const u16 BIO1ModPeriod[] = {11, 250, 400};
+const u16 BIO1ModCompare[] = {3, 140, 240};	
 void BIO1PWM(u8 i, u8 Work)
 {
 	static u16 BIO1TimeCnt = 0;
@@ -37,7 +37,7 @@ void BIO1PWM(u8 i, u8 Work)
 			BIO1ModRenew = i;
 		}
 		if((BIO1TimeCnt<BIO1ModCompare[BIO1ModRenew]))
-			TIM1_SetCompare4(8001);	//PWM_BIO
+			TIM1_SetCompare4(4000);	//PWM_BIO
 		else
 			TIM1_SetCompare4(0);	//PWM_BIO
 	}
@@ -82,18 +82,16 @@ void main(void)
   const u8 DIG2_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
   const u8 DIG3_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
   u8 TaskNumber = 1, KeyValue = 0, BIOIntensity = 0;
-  u8 BIOKeyDir = 1, TempKeyDir = 1;
   u8 KeyUp = 1;
-  u8 *EEAddr = (u8 *)0x00004000;
+  // u8 *EEAddr = (u8 *)0x00004000;
 
   //Init clock, CPU and Master clock is 16MHz
   CLK_HSICmd(ENABLE);
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
   
   //io init
-  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_FAST);
-  GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_OUT_PP_LOW_SLOW);
-  GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_OUT_PP_LOW_SLOW);
+  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_SLOW);
+  GPIO_Init(GPIOD, GPIO_PIN_4, GPIO_MODE_OUT_PP_LOW_SLOW);
 
   Uart1Init(115200);
 // Tim1_Time_Upmode_conf(16, 1000, 0);
@@ -106,19 +104,19 @@ void main(void)
   AD1Init();
   TM1650_Init(3, 1);
 
-  BIOIntensity = *EEAddr;
-  TempIntensity = *(EEAddr+1);
-  if((BIOIntensity>8)||(BIOIntensity>8))
-  {
-    FLASH_Unlock(FLASH_MEMTYPE_DATA);
-    BIOIntensity = 0;
-    TempIntensity = 0;
-    *EEAddr = BIOIntensity;
-    EEAddr++;
-    *EEAddr = TempIntensity;
-    EEAddr--;
-    FLASH_Lock(FLASH_MEMTYPE_DATA);
-  }
+  // BIOIntensity = *EEAddr;
+  // TempIntensity = *(EEAddr+1);
+  // if((BIOIntensity>8)||(BIOIntensity>8))
+  // {
+  //   FLASH_Unlock(FLASH_MEMTYPE_DATA);
+  //   BIOIntensity = 0;
+  //   TempIntensity = 0;
+  //   *EEAddr = BIOIntensity;
+  //   EEAddr++;
+  //   *EEAddr = TempIntensity;
+  //   EEAddr--;
+  //   FLASH_Lock(FLASH_MEMTYPE_DATA);
+  // }
 
   usart1_send_char(0X01); //version number
  // ADC1_StartConversion();
@@ -183,58 +181,26 @@ void main(void)
           else if((KeyValue==KEY_BIO)&&KeyUp)
           {           
             KeyUp = 0;
-            if(BIOKeyDir)
+            if(BIOIntensity==8)
             {
-              if(BIOIntensity==8)
-              {
-                BIOKeyDir = 0;
-                BIOIntensity--;
-              }
-              else
-              {
-                BIOIntensity++;
-              }     
+              BIOIntensity = 0;
             }
             else
             {
-              if(BIOIntensity==0)
-              {
-                BIOKeyDir = 1;
-                BIOIntensity++;
-              }
-              else
-              {
-                BIOIntensity--;
-              }   
-            } 
+              BIOIntensity++;
+            }     
           }
           else if((KeyValue==KEY_TEMP)&&KeyUp)
           {
             KeyUp = 0;
-            if(TempKeyDir)
+            if(TempIntensity==8)
             {
-              if(TempIntensity==8)
-              {
-                TempKeyDir = 0;
-                TempIntensity--;
-              }
-              else
-              {
-                TempIntensity++;
-              }     
+              TempIntensity = 0;
             }
             else
             {
-              if(TempIntensity==0)
-              {
-                TempKeyDir = 1;
-                TempIntensity++;
-              }
-              else
-              {
-                TempIntensity--;
-              }   
-            } 
+              TempIntensity++;
+            }   
           }     
           TaskNumber++;    
           break;
@@ -243,17 +209,17 @@ void main(void)
         {
           if(FlagState.work)
           {
-            TIM1_SetCompare3(BIO1IntensityTable[BIOIntensity]);     
+            TIM1_SetCompare3(BIO1IntensityTable[BIOIntensity]);   
             LED_CON = LED_CON_OPEN; 
-            if((*EEAddr!=BIOIntensity)||(*(EEAddr+1)!=TempIntensity))
-            {
-              FLASH_Unlock(FLASH_MEMTYPE_DATA);
-              *EEAddr = BIOIntensity;
-              EEAddr++;
-              *EEAddr = TempIntensity;
-              EEAddr--;
-              FLASH_Lock(FLASH_MEMTYPE_DATA);
-            }
+            // if((*EEAddr!=BIOIntensity)||(*(EEAddr+1)!=TempIntensity))
+            // {
+            //   FLASH_Unlock(FLASH_MEMTYPE_DATA);
+            //   *EEAddr = BIOIntensity;
+            //   EEAddr++;
+            //   *EEAddr = TempIntensity;
+            //   EEAddr--;
+            //   FLASH_Lock(FLASH_MEMTYPE_DATA);
+            // }
           }
           else
           {

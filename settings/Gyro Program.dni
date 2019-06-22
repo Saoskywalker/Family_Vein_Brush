@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1222595315
+Checksum=1083266623
 [CallStack]
 ShowArgs=0
 [Disassembly]
@@ -70,10 +70,10 @@ LogFile=_ ""
 Bp0=_ "STD_CODE" "{$PROJ_DIR$}.47.3" 0 0 0 0 "" 0 ""
 Bp1=_ "STD_CODE" "{$PROJ_DIR$}.47.3" 0 0 0 0 "" 0 ""
 Bp2=_ "STD_CODE" "{$PROJ_DIR$\User Src}.51.1" 0 0 0 0 "" 0 ""
-Bp3=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.103.1" 0 0 0 0 "" 0 ""
-Bp4=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.103.1" 0 0 0 0 "" 0 ""
-Bp5=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.103.1" 0 0 0 0 "" 0 ""
-Bp6=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.103.1" 0 0 0 0 "" 0 ""
+Bp3=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.104.3" 0 0 0 0 "" 0 ""
+Bp4=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.104.3" 0 0 0 0 "" 0 ""
+Bp5=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.104.3" 0 0 0 0 "" 0 ""
+Bp6=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.104.3" 0 0 0 0 "" 0 ""
 Count=7
 [Aliases]
 A0=_ "D:\Aysi\Projects\Gyro Program Beta\Library\delay\delay.c" ""

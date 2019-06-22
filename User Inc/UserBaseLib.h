@@ -86,8 +86,8 @@ void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules
 void AD1Init(void);
 
 //App define
-#define HEAT_PIN GPIOC_OUT->ODR6
-#define LED_CON GPIOC_OUT->ODR5
+#define HEAT_PIN GPIOD_OUT->ODR4
+#define LED_CON GPIOA_OUT->ODR3
 #define LED_CON_CLOSE 0
 #define LED_CON_OPEN 1
 #define REC_SEND_485 GPIOD_OUT->ODR3

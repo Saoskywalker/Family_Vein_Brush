@@ -230,7 +230,7 @@ INTERRUPT_HANDLER(TIM1_UPD_OVF_TRG_BRK_IRQHandler, 11)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */
-    GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
+    // GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
   TIM1->SR1 = ~0x01;
 }
 
@@ -291,7 +291,7 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
     FlagState.ms2 = 1;
     // GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
   }  
-  BIO1PWM(2, FlagState.work);
+  BIO1PWM(0, FlagState.work);
   HeatPWM(TempIntensity, FlagState.work);
   TIM2->SR1 = (uint8_t)(~TIM2_IT_UPDATE);
  }
