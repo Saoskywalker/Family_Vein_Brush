@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1083266623
+Checksum=938149193
 [CallStack]
 ShowArgs=0
 [Disassembly]
@@ -76,11 +76,12 @@ Bp5=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.104.3" 0 0 0 0 "" 0 ""
 Bp6=_ "STD_CODE" "{$PROJ_DIR$\User Src\main.c}.104.3" 0 0 0 0 "" 0 ""
 Count=7
 [Aliases]
-A0=_ "D:\Aysi\Projects\Gyro Program Beta\Library\delay\delay.c" ""
-A1=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_tim1.c" ""
-A2=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_tim4.c" ""
-A3=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_uart1.c" ""
-A4=_ "D:\Aysi\Projects\Gyro Program\Library\MPU6050\mpu6050.c" ""
-A5=_ "D:\Aysi\Projects\Gyro Program\User Src\main.c" ""
-Count=6
+A0=_ "D:\Aysi\Projects\FamilVeinBrush v1.0\ST Src\stm8s_uart1.c" ""
+A1=_ "D:\Aysi\Projects\Gyro Program Beta\Library\delay\delay.c" ""
+A2=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_tim1.c" ""
+A3=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_tim4.c" ""
+A4=_ "D:\Aysi\Projects\Gyro Program Beta\ST Src\stm8s_uart1.c" ""
+A5=_ "D:\Aysi\Projects\Gyro Program\Library\MPU6050\mpu6050.c" ""
+A6=_ "D:\Aysi\Projects\Gyro Program\User Src\main.c" ""
+Count=7
 SuppressDialog=0

@@ -20,8 +20,8 @@ History:
 /* Private function prototypes -----------------------------------------------*/
 
 //BIO1 PWM
-const u16 BIO1IntensityTable[] = {8001, 7200, 7000, 6200, 6000,
-																	5000, 4000, 3000, 2000};
+const u16 BIO1IntensityTable[] = {8001, 6200, 5900, 5600, 5300,
+																	5000, 4700, 4400, 4100};
 const u16 BIO1ModPeriod[] = {11, 250, 400};
 const u16 BIO1ModCompare[] = {3, 140, 240};	
 void BIO1PWM(u8 i, u8 Work)
@@ -50,8 +50,8 @@ void BIO1PWM(u8 i, u8 Work)
 
 //Heat
 u8 TempIntensity = 0;
-const u16 HeatIntensityTable[] = {0, 100, 200, 300, 400,
-																	500, 600, 700, 800};
+const u16 HeatIntensityTable[] = {0, 5, 7, 9, 12,
+																	15, 20, 25, 32};
 void HeatPWM(u8 i, u8 Work)
 {
 	static u16 HeatTimeCnt = 0;
@@ -59,7 +59,7 @@ void HeatPWM(u8 i, u8 Work)
 	
 	if(Work)
 	{
-		if(++HeatTimeCnt>=1000)
+		if(++HeatTimeCnt>=40)
 		{
 			HeatTimeCnt = 0;
 			HeatModRenew = i;
@@ -96,7 +96,7 @@ void main(void)
   Uart1Init(115200);
 // Tim1_Time_Upmode_conf(16, 1000, 0);
   //Timer4Init();       //Count 200us
-  Tim2_Time_Upmode_conf(4, 1000);        //f: 1us, 2ms Int
+  Tim2_Time_Upmode_conf(4, 1000);        //f: 1us, 1ms Int
   enableInterrupts();//Open main interrupt
 
   delay_init();
@@ -153,7 +153,8 @@ void main(void)
         }
         case 2: //KEY GET AND DISPLAY
         {
-          SMG_One_Display(DIG1, DIG1_Dis[FlagState.work]);
+          // SMG_One_Display(DIG1, DIG1_Dis[FlagState.work]);
+          SMG_One_Display(DIG1, DIG1_Dis[1]);
           SMG_One_Display(DIG2, DIG2_Dis[BIOIntensity]);
           SMG_One_Display(DIG3, DIG3_Dis[TempIntensity]);
           KeyValue = Key_Get();

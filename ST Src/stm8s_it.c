@@ -291,7 +291,7 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
     FlagState.ms2 = 1;
     // GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
   }  
-  BIO1PWM(0, FlagState.work);
+  BIO1PWM(1, FlagState.work);
   HeatPWM(TempIntensity, FlagState.work);
   TIM2->SR1 = (uint8_t)(~TIM2_IT_UPDATE);
  }
