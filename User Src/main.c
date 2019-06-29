@@ -77,7 +77,8 @@ void HeatPWM(u8 i, u8 Work)
 }
 
 void main(void)
-{  
+{ 
+  // u16 advalue = 0, s1 = 0; 
   const u8 DIG1_Dis[] = {0, BIT0_1}; 
   const u8 DIG2_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
   const u8 DIG3_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
@@ -208,6 +209,23 @@ void main(void)
         }
         case 4: //work process
         {
+          // if (++s1 >= 100) //1s
+          // {
+          //   s1 = 0;
+          //   for (u8 ioi = 0; ioi < 8; ioi++)
+          //   {
+          //     ADC1->CR1 |= ADC1_CR1_ADON; //start adc convert
+          //     while (!(ADC1->CSR & 0X80))
+          //       ;                     //check EOC flag
+          //     ADC1->CSR &= ~(1 << 7); //clear EOC flag
+          //     advalue += ADC1_GetConversionValue();
+          //   }
+          //   advalue = advalue >> 3;
+          //   usart1_send_char(advalue >> 8);
+          //   usart1_send_char((u8)advalue);
+          //   advalue = 0;
+          // }
+
           if(FlagState.work)
           {
             TIM1_SetCompare3(BIO1IntensityTable[BIOIntensity]);   

@@ -351,7 +351,7 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
    
    if(UART1_GetITStatus(UART1_IT_TC))
    {
-     UART1->SR &= ~0xC0;	    
+     UART1->SR &= ~0xC0;	 //clear flag   
      if(--SendBufLen>0)
      {
        UART1->DR = *++SendBuffer;//Send one Byte with UART1
