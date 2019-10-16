@@ -21,6 +21,51 @@ Date: 2019.10.15
 #define BIT6_1 0x40
 #define BIT7_1 0x80
 
+void Uart0Init(u32 u32Baudrate);
+volatile void Delay(uint16_t nCount);
+void UART0SendBuf(u8 *SendBufAddr, u8 SendLen);
+void IWDG_Configuration(void);
+#define IWDG_Feed set_WDCLR
+void Tim2_Time_Upmode_conf(uint16_t TIM2_Period);
+void PWM_Init(uint16_t Period, uint16_t pules);
+void AD1Init(void);
+
+//App define
+#define HEAT_PIN P30
+#define LED_CON P02
+#define CHANNEL1_PIN P06
+#define CHANNEL2_PIN P07
+#define CHANNEL3_PIN P16
+#define BIOS_PIN P03
+#define BIOA_PIN P04
+#define POWER_PIN P20
+
+#define A_OUT_PIN P01
+#define B_OUT_PIN P00
+#define C_OUT_PIN P10
+#define D_OUT_PIN P11
+#define E_OUT_PIN P12
+#define F_OUT_PIN P13
+#define G_OUT_PIN P14
+#define H_OUT_PIN P15
+
+#define A_IN_PIN P01
+#define B_IN_PIN P00
+#define C_IN_PIN P10
+#define D_IN_PIN P11
+#define E_IN_PIN P12
+#define F_IN_PIN P13
+#define G_IN_PIN P14
+#define H_IN_PIN P15
+
+#define LED_CLOSE 1
+#define LED_OPEN 0
+
+#define REC_SEND_485 GPIOD_OUT->ODR3
+#define REC_485 0
+#define SEND_485 1
+
+//App value
 typedef struct
 {
  unsigned char ms1        : 1;
@@ -38,58 +83,12 @@ extern u8 SendBufLen;
 extern u8 *SendBuffer;
 extern u8 UART1BusyFlag;
 
-void Uart0Init(u32 u32Baudrate);
-volatile void Delay(uint16_t nCount);
-void UART0SendBuf(u8 *SendBufAddr, u8 SendLen);
-void IWDG_Configuration(void);
-void Tim2_Time_Upmode_conf(uint8_t TIM2_Prescaler,uint16_t TIM2_Period);
-void Tim1_Time_Upmode_conf(uint16_t TIM1_Prescaler,
-                           uint16_t TIM1_Period,
-                           uint8_t TIM1_RepetitionCounter);
-void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules);
-void AD1Init(void);
-
-//App define
-#define HEAT_PIN GPIOA_OUT->ODR3
-#define LED_CON GPIOB_OUT->ODR5
-#define CHANNEL1_PIN GPIOD_OUT->ODR4
-#define CHANNEL2_PIN GPIOD_OUT->ODR5
-#define CHANNEL3_PIN GPIOD_OUT->ODR6
-#define BIOS_PIN GPIOA_OUT->ODR1
-#define BIOA_PIN GPIOA_OUT->ODR2
-
-#define A_OUT_PIN GPIOB_OUT->ODR4
-#define B_OUT_PIN GPIOC_OUT->ODR3
-#define C_OUT_PIN GPIOC_OUT->ODR4
-#define D_OUT_PIN GPIOC_OUT->ODR5
-#define E_OUT_PIN GPIOC_OUT->ODR6
-#define F_OUT_PIN GPIOC_OUT->ODR7
-#define G_OUT_PIN GPIOD_OUT->ODR1
-#define H_OUT_PIN GPIOD_OUT->ODR2
-
-#define A_IN_PIN GPIOB_IN->IDR4
-#define B_IN_PIN GPIOC_IN->IDR3
-#define C_IN_PIN GPIOC_IN->IDR4
-#define D_IN_PIN GPIOC_IN->IDR5
-#define E_IN_PIN GPIOC_IN->IDR6
-#define F_IN_PIN GPIOC_IN->IDR7
-#define G_IN_PIN GPIOD_IN->IDR1
-#define H_IN_PIN GPIOD_IN->IDR2
-
-#define LED_CLOSE 1
-#define LED_OPEN 0
-
-#define REC_SEND_485 GPIOD_OUT->ODR3
-#define REC_485 0
-#define SEND_485 1
-
-//App value
-extern u8 EEPROMLocal;
-extern u32 EECountTemp;
+// extern u8 EEPROMLocal;
+// extern u32 EECountTemp;
 
 //App Function
-u32 EEPROMRestartDeal();
-void EEPROMStorage(u32 *EECount);
+// u32 EEPROMRestartDeal();
+// void EEPROMStorage(u32 *EECount);
 
 //SMG display
 #define DIG1 (u8)0X68
@@ -103,6 +102,7 @@ void EEPROMStorage(u32 *EECount);
 #define KEY_TEMP 0X47
 #define KEY_START 0X4F
 #define KEY_BIO 0X57
+#define KEY_CHARGE 0X58
 
 #define Key_Get() MCU_DK_Key();
 

@@ -14,6 +14,7 @@ History:
 // #define DEBUG
 #include "UserBaseLib.h"
 #include "delay.h"
+//#include <stdio.h>
 // #include "UART_Frame.h"
 
 /* Private defines -----------------------------------------------------------*/
@@ -145,14 +146,24 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
       keyCnt1 = 0; //clear cnt
       keyCnt2 = 0;
       keyCnt3 = 0;
-      GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_IN_FL_NO_IT); //A
-      GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_IN_PU_NO_IT); //B
-      GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_IN_PU_NO_IT); //C
-      GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_IN_PU_NO_IT); //D
-      GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT); //E
-      GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT); //F
-      GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT); //G
-      GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT); //H
+      keyCnt4 = 0;
+      // GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_IN_FL_NO_IT); //A
+      // GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_IN_PU_NO_IT); //B
+      // GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_IN_PU_NO_IT); //C
+      // GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_IN_PU_NO_IT); //D
+      // GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT); //E
+      // GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT); //F
+      // GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT); //G
+      // GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT); //H
+      A_OUT_PIN = 1;
+      B_OUT_PIN = 1;
+      C_OUT_PIN = 1;
+      D_OUT_PIN = 1;
+      E_OUT_PIN = 1;
+      F_OUT_PIN = 1;
+      G_OUT_PIN = 1;
+      H_OUT_PIN = 1;
+
       //close channel
       CHANNEL1_PIN = 1;
       CHANNEL2_PIN = 1;
@@ -160,14 +171,22 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     }
     else //A~H become output
     {
-      GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_OUT_OD_HIZ_SLOW); //A
-      GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_OUT_PP_HIGH_SLOW); //B
-      GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_SLOW); //C
-      GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_SLOW); //D
-      GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_OUT_PP_HIGH_SLOW); //E
-      GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_OUT_PP_HIGH_SLOW); //F
-      GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_OUT_PP_HIGH_SLOW); //G
-      GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_OUT_PP_HIGH_SLOW); //H
+      // GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_OUT_OD_HIZ_SLOW); //A
+      // GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_OUT_PP_HIGH_SLOW); //B
+      // GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_SLOW); //C
+      // GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_SLOW); //D
+      // GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_OUT_PP_HIGH_SLOW); //E
+      // GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_OUT_PP_HIGH_SLOW); //F
+      // GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_OUT_PP_HIGH_SLOW); //G
+      // GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_OUT_PP_HIGH_SLOW); //H
+      A_OUT_PIN = LED_CLOSE;
+      B_OUT_PIN = LED_CLOSE;
+      C_OUT_PIN = LED_CLOSE;
+      D_OUT_PIN = LED_CLOSE;
+      E_OUT_PIN = LED_CLOSE;
+      F_OUT_PIN = LED_CLOSE;
+      G_OUT_PIN = LED_CLOSE;
+      H_OUT_PIN = LED_CLOSE;
 
       //close channel
       CHANNEL1_PIN = 1;
@@ -229,7 +248,7 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     
   if(step==4) //scan key, note key scan time: 1/4 period
   {
-    if(F_IN_PIN==0)
+    if(A_IN_PIN==0)
     {
       if(++keyCnt1>=45) //sensibility
       {
@@ -242,7 +261,7 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     {
       keyCnt1 = 0;
     }
-    if(G_IN_PIN==0)
+    if(POWER_PIN==0)
     {
       if(++keyCnt2>=45) //sensibility
       {
@@ -255,7 +274,7 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     {
       keyCnt2 = 0;
     }
-    if(H_IN_PIN==0)
+    if(B_IN_PIN==0)
     {
       if(++keyCnt3>=45) //sensibility
       {
@@ -267,6 +286,19 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     else
     {
       keyCnt3 = 0;
+    }
+    if(H_IN_PIN==0)
+    {
+      if(++keyCnt4>=45) //sensibility
+      {
+        keyCnt4 = 45;
+        MCU_DK_KeyData = KEY_CHARGE;
+        return;
+      }
+    }
+    else
+    {
+      keyCnt4 = 0;
     }
     MCU_DK_KeyData = 0;
   }
@@ -306,57 +338,36 @@ void main(void)
   const u8 DIG3_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
   u8 TaskNumber = 1, KeyValue = 0;
   u8 KeyUp = 1;
-  // u8 *EEAddr = (u8 *)0x00004000;
-
-  //Init clock, CPU and Master clock is 16MHz
-  CLK_HSICmd(ENABLE);
-  CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
   
-  //io init
-  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_SLOW); //HEAT
-  GPIO_Init(GPIOB, GPIO_PIN_5, GPIO_MODE_OUT_OD_LOW_SLOW); //LED
-  GPIO_Init(GPIOD, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_SLOW); //Channel 1
-  GPIO_Init(GPIOD, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_SLOW); //Channel 2
-  GPIO_Init(GPIOD, GPIO_PIN_6, GPIO_MODE_OUT_PP_HIGH_SLOW); //Channel 3
-  GPIO_Init(GPIOA, GPIO_PIN_1, GPIO_MODE_OUT_PP_HIGH_SLOW); //BIO S
-  GPIO_Init(GPIOA, GPIO_PIN_2, GPIO_MODE_OUT_PP_LOW_SLOW); //BIO A
+  //io init 
+  //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
+  set_P2S_0; //POWER KEY, up pull mode
+  // Quasi-Bidirectional MODE
+  P30_Quasi_Mode; HEAT_PIN = 0; //HEAT
+  P02_Quasi_Mode; LED_CON = 0; //LED
+  P06_Quasi_Mode; CHANNEL1_PIN = 1; //Channel 1
+  P07_Quasi_Mode; CHANNEL2_PIN = 1; //Channel 2
+  P16_Quasi_Mode; CHANNEL3_PIN = 1; //Channel 3
+  P03_Quasi_Mode; BIOS_PIN = 1; //BIO S
+  P04_Quasi_Mode; BIOA_PIN = 0;//BIO A
 
-  GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_IN_FL_NO_IT); //A
-  GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_IN_PU_NO_IT); //B
-  GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_IN_PU_NO_IT); //C
-  GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_IN_PU_NO_IT); //D
-  GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT); //E
-  GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT); //F
-  GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT); //G
-  GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT); //H
+  P01_Quasi_Mode; A_OUT_PIN = LED_CLOSE; //A
+  P00_Quasi_Mode; B_OUT_PIN = LED_CLOSE; //B
+  P10_Quasi_Mode; C_OUT_PIN = LED_CLOSE; //C
+  P11_Quasi_Mode; D_OUT_PIN = LED_CLOSE; //D
+  P12_Quasi_Mode; E_OUT_PIN = LED_CLOSE; //E
+  P13_Quasi_Mode; F_OUT_PIN = LED_CLOSE; //F
+  P14_Quasi_Mode; G_OUT_PIN = LED_CLOSE; //G
+  P15_Quasi_Mode; H_OUT_PIN = LED_CLOSE; //H
 
   // Uart1Init(115200);
-// Tim1_Time_Upmode_conf(16, 1000, 0);
-  //Timer4Init();       //Count 200us
-  Tim2_Time_Upmode_conf(4, 100);        
-  enableInterrupts();//Open main interrupt
+  Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);        
+  set_EA;//Open main interrupt
 
-  delay_init();
-  // TIM1_PWM_Init(0, 8000, 0);
+  // delay_init();
+  // PWM_Init(0x7CF, 0);
   AD1Init();
   // TM1650_Init(0, 1);
-
-  // BIOIntensity = *EEAddr;
-  // TempIntensity = *(EEAddr+1);
-  // if((BIOIntensity>8)||(BIOIntensity>8))
-  // {
-  //   FLASH_Unlock(FLASH_MEMTYPE_DATA);
-  //   BIOIntensity = 0;
-  //   TempIntensity = 0;
-  //   *EEAddr = BIOIntensity;
-  //   EEAddr++;
-  //   *EEAddr = TempIntensity;
-  //   EEAddr--;
-  //   FLASH_Lock(FLASH_MEMTYPE_DATA);
-  // }
-
-  // usart1_send_char(0X01); //version number
- // ADC1_StartConversion();
 
 #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
@@ -365,17 +376,7 @@ void main(void)
   while (1)
   {
 #ifndef DEBUG
-    IWDG->KR = 0xAA;  //Clear IWDG cnt
-#endif
-
-#ifdef DEBUG
-// usart1_send_char(TM1650_Key());
-// TM1650_Display(0x6c, 0xFF);
-// delay_ms(500);
-// TM1650_Display(0x6c, 0x03);
-// delay_ms(500);
-  //  usart1_send_char(0xaa);
-    //GPIOA_OUT->ODR3 = ~ GPIOA_OUT->ODR3;
+    IWDG_Feed;  //Clear IWDG cnt
 #endif
 
     if (FlagState.ms2)
@@ -391,8 +392,8 @@ void main(void)
         case 2: //KEY GET AND DISPLAY
         {
           SMG_One_Display(DIG3, DIG1_Dis[FlagState.work]);
-          SMG_One_Display(DIG1, DIG2_Dis[BIOIntensity]);
-          SMG_One_Display(DIG2, DIG3_Dis[TempIntensity]);
+          SMG_One_Display(DIG2, DIG2_Dis[BIOIntensity]);
+          SMG_One_Display(DIG1, DIG3_Dis[TempIntensity]);
           KeyValue = Key_Get();
           TaskNumber++;
           break;
@@ -464,15 +465,6 @@ void main(void)
           if(FlagState.work)
           {
             LED_CON = 1; 
-            // if((*EEAddr!=BIOIntensity)||(*(EEAddr+1)!=TempIntensity))
-            // {
-            //   FLASH_Unlock(FLASH_MEMTYPE_DATA);
-            //   *EEAddr = BIOIntensity;
-            //   EEAddr++;
-            //   *EEAddr = TempIntensity;
-            //   EEAddr--;
-            //   FLASH_Lock(FLASH_MEMTYPE_DATA);
-            // }
           }
           else
           {
@@ -496,27 +488,3 @@ void main(void)
     }
   } 
 }
-
-#ifdef USE_FULL_ASSERT
-
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *   where the assert_param error has occurred.
-  * @param file: pointer to the source file name
-  * @param line: assert_param error line source number
-  * @retval : None
-  */
-void assert_failed(u8* file, u32 line)
-{ 
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
-  while (1)
-  {
-  }
-}
-#endif
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

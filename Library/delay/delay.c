@@ -112,3 +112,35 @@ void Timer3_Delay10us(UINT32 u32CNT)
     }
     clr_TR3;                                		//Stop Timer3
 }
+//------------------------------------------------------------------------------
+void Timer3_Delay1us(UINT32 u32CNT)
+{
+    T3CON = 0x01;                           		//Timer3 Clock = Fsys/2
+    set_TR3;                                		//Trigger Timer3
+    while (u32CNT != 0)
+    {
+        //8*2/16000000 = 0.000001s	
+        RL3 = LOBYTE(65536-8); //Find  define in "Function_define.h" "TIMER VALUE"
+        RH3 = HIBYTE(65536-8);
+        while ((T3CON&SET_BIT4) != SET_BIT4);		//Check Timer3 Time-Out Flag
+        clr_TF3;
+        u32CNT --;
+    }
+    clr_TR3;                                		//Stop Timer3
+}
+//------------------------------------------------------------------------------
+void Timer3_Delay1ms(UINT32 u32CNT)
+{
+    T3CON = 0x07;                           		//Timer3 Clock = Fsys/128
+    set_TR3;                                		//Trigger Timer3
+    while (u32CNT != 0)
+    {
+        //125*128/16000000 = 100 ms
+        RL3 = LOBYTE(65536-125); //Find  define in "Function_define.h" "TIMER VALUE"
+        RH3 = HIBYTE(65536-125);
+        while ((T3CON&SET_BIT4) != SET_BIT4);		//Check Timer3 Time-Out Flag
+        clr_TF3;
+        u32CNT --;
+    }
+    clr_TR3;                                		//Stop Timer3
+}

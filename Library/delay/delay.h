@@ -13,7 +13,7 @@ void Timer0_Delay40ms(UINT32 u32CNT);
 void Timer3_Delay10us(UINT32 u32CNT);
 
 // void delay_init(void);
-#define delay_ms(nms) Timer3_Delay10us(nms)
-#define delay_us(nus) Timer3_Delay10us(nus)
+#define delay_ms(nms) Timer3_Delay1ms(nms)
+#define delay_us(nus) Timer3_Delay1us(nus)
 
 #endif

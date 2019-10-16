@@ -311,7 +311,7 @@
               <MiscControls></MiscControls>
               <Define>FOSC_160000</Define>
               <Undefine></Undefine>
-              <IncludePath>.\BSP\N76E003\Include;.\User Inc</IncludePath>
+              <IncludePath>.\User Inc;.\N76E003\Include;.\Library\delay</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -361,31 +361,6 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Common</GroupName>
-          <Files>
-            <File>
-              <FileName>Common.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\BSP\N76E003\Common\Common.c</FilePath>
-            </File>
-            <File>
-              <FileName>Delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\BSP\N76E003\Common\Delay.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>Startup</GroupName>
-          <Files>
-            <File>
-              <FileName>STARTUP.A51</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\BSP\N76E003\Startup\STARTUP.A51</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>User Src</GroupName>
           <Files>
             <File>
@@ -397,6 +372,31 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User Src\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>interrupt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User Src\interrupt.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>N76E003 Src</GroupName>
+          <Files>
+            <File>
+              <FileName>STARTUP.A51</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\N76E003\Startup\STARTUP.A51</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Library</GroupName>
+          <Files>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\delay\delay.c</FilePath>
             </File>
           </Files>
         </Group>
