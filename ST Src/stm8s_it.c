@@ -282,17 +282,24 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
   /* In order to detect unexpected events during development,
      it is recommended to set a breakpoint on the following instruction.
   */
-  static u8 Flag2msCnt = 0;
+  static u16 Flag2msCnt = 0, Flag1msCnt;
   
-  FlagState.ms1 = 1;
-  if(++Flag2msCnt>=2)
+  FlagState.u100 = 1;
+  if(++Flag1msCnt>=10)
+  {
+    Flag1msCnt = 0;
+    FlagState.ms1 = 1;
+    HeatPWM(TempIntensity, FlagState.work);
+  }  
+  if(++Flag2msCnt>=20)
   {
     Flag2msCnt = 0;
     FlagState.ms2 = 1;
     // GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
   }  
   BIO1PWM(1, FlagState.work);
-  HeatPWM(TempIntensity, FlagState.work);
+  BIO1Power(BIOIntensity, FlagState.work);
+  MCU_DK_DisAndKey_Handle();
   TIM2->SR1 = (uint8_t)(~TIM2_IT_UPDATE);
  }
 
@@ -376,6 +383,7 @@ INTERRUPT_HANDLER(TIM1_CAP_COM_IRQHandler, 12)
    if(UART1_GetITStatus(UART1_IT_RXNE))
    {
      UART1_ClearITPendingBit(UART1_IT_RXNE);
+    //  UART1->DR = 0x12;
     //  commRx2Handler(UART1_ReceiveData8());
     //  GPIOA_OUT->ODR3 = ~GPIOA_OUT->ODR3;
    }	
