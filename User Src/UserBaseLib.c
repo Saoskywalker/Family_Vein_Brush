@@ -1,7 +1,7 @@
 /************************************************************************
-Name: UserBaseLib for STM8S IAR
+Name: UserBaseLib for N76E003 KEIL
 Editor: Aysi
-Date: 2017.11.23
+Date: 2019.10.15
 ************************************************************************/
 
 #include "UserBaseLib.h"
@@ -12,24 +12,7 @@ u8 *SendBuffer = 0;
 u8 UART1BusyFlag = 0;
 _StateBit FlagState = {0, 0, 0, 0, 0, 0, 0, 0};
 
-//IAR STM8S Function
-void Timer4Init(void)//Count 200us
-{
-  /*TIM4_UpdateDisableConfig(ENABLE);//允许更新事件
-  TIM4_ARRPreloadConfig(ENABLE);//自动重装
-  TIM4_ITConfig(TIM4_IT_UPDATE, ENABLE);//中断配置，更新中断
-  TIM4_SetCounter(0xff);//计数器初值
-  TIM4_SetAutoreload(0xFF);//计数器自动重装的初值
-  TIM4_PrescalerConfig(TIM4_PRESCALER_128, TIM4_PSCRELOADMODE_UPDATE);//预分频值
-  */
-  TIM4_TimeBaseInit(TIM4_PRESCALER_16, 200);
-  /* Clear TIM4 update flag */
-  TIM4_ClearFlag(TIM4_FLAG_UPDATE);
-  
-  /* Enable update interrupt */
-  TIM4_ITConfig(TIM4_IT_UPDATE, ENABLE);
-  TIM4_Cmd(DISABLE);
-}  
+
 
 void Tim1_Time_Upmode_conf(uint16_t TIM1_Prescaler,
                            uint16_t TIM1_Period,
@@ -81,44 +64,40 @@ void TIM1_PWM_Init(uint16_t TIM1_Prescaler, uint16_t TIM1_Period, uint16_t pules
 
 void AD1Init(void)
 {
-  GPIO_Init(GPIOD, GPIO_PIN_3, GPIO_MODE_IN_FL_NO_IT);  //Set float input
-  ADC1_DeInit();  //reset ADC
-  //mode; channel; prescale; trigger & switch; align way; schmitt channel & switch
-  ADC1_Init(ADC1_CONVERSIONMODE_SINGLE, ADC1_CHANNEL_4, ADC1_PRESSEL_FCPU_D8,
-            ADC1_EXTTRIG_TIM, DISABLE, ADC1_ALIGN_LEFT,
-            ADC1_SCHMITTTRIG_CHANNEL4, DISABLE);
-  // ADC1_ITConfig(ADC1_IT_EOCIE, ENABLE); //open int
-  // ADC1_Cmd(ENABLE);
-  delay_ms(10); //wait ADC ready
+  Enable_ADC_AIN4;
+  clr_ADCF;
 }
 
-void Uart1Init(u32 baud) 
+void Uart0Init(u32 u32Baudrate) 
 {
-  UART1_DeInit();
-  GPIO_Init(GPIOD, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_FAST);  // PD3 = RD/DE
-  GPIO_Init(GPIOD, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_FAST); // PD5 = TX1
-  GPIO_Init(GPIOD, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT);      // PD6 = RX1
-  UART1_Init(
-             baud,
-             UART1_WORDLENGTH_8D,
-             UART1_STOPBITS_1_5,
-             UART1_PARITY_NO,
-             UART1_SYNCMODE_CLOCK_DISABLE,
-             UART1_MODE_TXRX_ENABLE);
+  P06_Quasi_Mode;		//Setting UART pin as Quasi mode for transmit
+  P07_Quasi_Mode;		//Setting UART pin as Quasi mode for transmit
+
+  SCON = 0x50;     	//UART0 Mode1,REN=1,TI=1
+  TMOD |= 0x20;    	//Timer1 Mode1
   
-  UART1_ITConfig(UART1_IT_RXNE_OR, ENABLE);
-  UART1->SR &= ~0xC0;
-//  UART1->CR2 |= 1<<6;//enable TX interrupt
-  UART1_Cmd(ENABLE);
+  set_SMOD;        	//UART0 Double Rate Enable
+  set_T1M;
+  clr_BRCK;        	//Serial port 0 baud rate clock source = Timer1
+ 
+#ifdef FOSC_160000
+    TH1 = 256 - (1000000/u32Baudrate+1);               /*16 MHz */
+#endif    	
+#ifdef FOSC_166000
+    TH1 = 256 - (1037500/u32Baudrate);         		     /*16.6 MHz */
+#endif
+    set_TR1;
+		set_TI;						//For printf function must setting TI = 1
 }
 
 //UART send Buffer
-void UART1SendBuf(u8 *SendBufAddr, u8 SendLen)
+void UART0SendBuf(u8 *SendBufAddr, u8 SendLen)
 {
   SendBufLen = SendLen;
   SendBuffer = SendBufAddr;
   UART1BusyFlag = 1;
-  UART1->DR = *SendBuffer;//Send one Byte with UART1
+//Send one Byte with UART0
+  Send_Data_To_UART0(*SendBuffer);
 }
 
 //Config 16bit Timer2: f=f_master/2^[3:0]
@@ -138,18 +117,17 @@ void Tim2_Time_Upmode_conf(uint8_t TIM2_Prescaler,uint16_t TIM2_Period)
     TIM2->CR1 |= 0x01;
 }
 
-volatile void Delay(uint16_t nCount)//about 0.5us
-{
+volatile void Delay(uint16_t nCount) 
   uint16_t i = nCount;
   while (nCount != 0)
   {
     nCount--;
-    asm("nop");
+    nop
   }
   while (i != 0)
   {
     i--;
-    asm("nop");
+    nop
   }
 }
 

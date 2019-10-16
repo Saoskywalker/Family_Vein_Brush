@@ -6,24 +6,26 @@ Describe:
 History: 
 2019.5.28: Created
 2019.6.1; OK
+2019.10.14: cannel tm1650, use mcu replace
+2019.10.15: implant from STM8S003 to N76E003
 *****************************************************************************/ 
 
 /* Includes ------------------------------------------------------------------*/
 // #define DEBUG
 #include "UserBaseLib.h"
 #include "delay.h"
-#include "UART_Frame.h"
-#include "TM1650.h"
+// #include "UART_Frame.h"
 
 /* Private defines -----------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
 
 //BIO1 PWM
-const u16 BIO1IntensityTable[] = {8001, 6200, 5900, 5600, 5300,
-																	5000, 4700, 4400, 4100};
-const u16 BIO1ModPeriod[] = {11, 250, 400};
-const u16 BIO1ModCompare[] = {3, 140, 240};	
+u8 BIOIntensity = 0;
+const u16 BIO1IntensityTable[] = {0, 21, 22, 23, 24, 25,
+																	26, 27, 28};
+const u16 BIO1ModPeriod[] = {11, 330, 400};
+const u16 BIO1ModCompare[] = {3, 2, 240};	
 void BIO1PWM(u8 i, u8 Work)
 {
 	static u16 BIO1TimeCnt = 0;
@@ -37,14 +39,38 @@ void BIO1PWM(u8 i, u8 Work)
 			BIO1ModRenew = i;
 		}
 		if((BIO1TimeCnt<BIO1ModCompare[BIO1ModRenew]))
-			TIM1_SetCompare4(4000);	//PWM_BIO
+			BIOS_PIN = 0; //open
 		else
-			TIM1_SetCompare4(0);	//PWM_BIO
+			BIOS_PIN = 1; //close
 	}
 	else
 	{
 		BIO1TimeCnt = 0;
-		TIM1_SetCompare4(0);	//PWM_BIO
+		BIOS_PIN = 1; //close
+	}
+}
+
+void BIO1Power(u8 i, u8 Work)
+{
+  static u16 BIO1TimeCnt = 0;
+	static u8 BIO1ModRenew = 0;
+	
+	if(Work)
+	{
+		if(++BIO1TimeCnt>=77)
+		{
+			BIO1TimeCnt = 0;
+			BIO1ModRenew = i;
+		}
+		if((BIO1TimeCnt<BIO1IntensityTable[BIO1ModRenew]))
+			BIOA_PIN = 1;
+		else
+			BIOA_PIN = 0;
+	}
+	else
+	{
+		BIO1TimeCnt = 0;
+		BIOA_PIN = 0;
 	}
 }
 
@@ -76,13 +102,209 @@ void HeatPWM(u8 i, u8 Work)
 	}
 }
 
+/*MCU LED&KEY IO use together function model*/
+u8 MCU_DK_KeyData = 0, MCU_DK_DisLight = 30; //light relate to display period
+struct {
+ u8 dat1;
+ u8 dat2;
+ u8 dat3;
+}DisStruct;
+
+void MCU_DK_Display(u8 ch,u8 dat) //set SMG display
+{
+  if(ch==DIG1)
+    DisStruct.dat1 = dat;
+  else if(ch==DIG2)
+    DisStruct.dat2 = dat;
+  else if(ch==DIG3)
+    DisStruct.dat3 = dat;
+}
+
+u8 MCU_DK_Key(void)	  //key scan
+{
+  return MCU_DK_KeyData;
+}
+
+void MCU_DK_SetLight(u8 i) //back light
+{
+  MCU_DK_DisLight = i;
+}
+
+void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion 
+{
+  static u8 step = 1, cnt = 0, ii = 0;
+  static u8 keyCnt1 = 0, keyCnt2 = 0, keyCnt3 = 0, keyCnt4 = 0;
+
+  if(++cnt>=50) //period 50Hz
+  {
+    cnt = 0;
+    if(++step>4)
+      step = 1;
+    if(step>=4) //A~H become input
+    {
+      keyCnt1 = 0; //clear cnt
+      keyCnt2 = 0;
+      keyCnt3 = 0;
+      GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_IN_FL_NO_IT); //A
+      GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_IN_PU_NO_IT); //B
+      GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_IN_PU_NO_IT); //C
+      GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_IN_PU_NO_IT); //D
+      GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT); //E
+      GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT); //F
+      GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT); //G
+      GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT); //H
+      //close channel
+      CHANNEL1_PIN = 1;
+      CHANNEL2_PIN = 1;
+      CHANNEL3_PIN = 1;
+    }
+    else //A~H become output
+    {
+      GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_OUT_OD_HIZ_SLOW); //A
+      GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_OUT_PP_HIGH_SLOW); //B
+      GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_SLOW); //C
+      GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_SLOW); //D
+      GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_OUT_PP_HIGH_SLOW); //E
+      GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_OUT_PP_HIGH_SLOW); //F
+      GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_OUT_PP_HIGH_SLOW); //G
+      GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_OUT_PP_HIGH_SLOW); //H
+
+      //close channel
+      CHANNEL1_PIN = 1;
+      CHANNEL2_PIN = 1;
+      CHANNEL3_PIN = 1;
+
+      //renew display data
+    switch (step)
+    {
+    case 1: 
+      ii = DisStruct.dat1;
+      break;
+
+    case 2:
+      ii = DisStruct.dat2;
+      break;
+
+    case 3:
+      ii = DisStruct.dat3;
+      break;
+
+    default:
+      break;
+    }
+    if (ii & 0X01)
+      A_OUT_PIN = LED_OPEN;
+    else
+      A_OUT_PIN = LED_CLOSE;
+    if (ii & 0X02)
+      B_OUT_PIN = LED_OPEN;
+    else
+      B_OUT_PIN = LED_CLOSE;
+    if (ii & 0X04)
+      C_OUT_PIN = LED_OPEN;
+    else
+      C_OUT_PIN = LED_CLOSE;
+    if (ii & 0X08)
+      D_OUT_PIN = LED_OPEN;
+    else
+      D_OUT_PIN = LED_CLOSE;
+    if (ii & 0X10)
+      E_OUT_PIN = LED_OPEN;
+    else
+      E_OUT_PIN = LED_CLOSE;
+    if (ii & 0X20)
+      F_OUT_PIN = LED_OPEN;
+    else
+      F_OUT_PIN = LED_CLOSE;
+    if (ii & 0X40)
+      G_OUT_PIN = LED_OPEN;
+    else
+      G_OUT_PIN = LED_CLOSE;
+    if (ii & 0X80)
+      H_OUT_PIN = LED_OPEN;
+    else
+      H_OUT_PIN = LED_CLOSE;
+    }  
+  }
+    
+  if(step==4) //scan key, note key scan time: 1/4 period
+  {
+    if(F_IN_PIN==0)
+    {
+      if(++keyCnt1>=45) //sensibility
+      {
+        keyCnt1 = 45;
+        MCU_DK_KeyData = KEY_TEMP;
+        return;
+      }
+    }
+    else
+    {
+      keyCnt1 = 0;
+    }
+    if(G_IN_PIN==0)
+    {
+      if(++keyCnt2>=45) //sensibility
+      {
+        keyCnt2 = 45;
+        MCU_DK_KeyData = KEY_START;
+        return;
+      }
+    }
+    else
+    {
+      keyCnt2 = 0;
+    }
+    if(H_IN_PIN==0)
+    {
+      if(++keyCnt3>=45) //sensibility
+      {
+        keyCnt3 = 45;
+        MCU_DK_KeyData = KEY_BIO;
+        return;
+      }
+    }
+    else
+    {
+      keyCnt3 = 0;
+    }
+    MCU_DK_KeyData = 0;
+  }
+  else if (cnt < MCU_DK_DisLight) //scan display
+  {
+    switch (step)
+    {
+    case 1: 
+      CHANNEL1_PIN = 0;
+      break;
+
+    case 2:
+      CHANNEL2_PIN = 0;
+      break;
+
+    case 3:
+      CHANNEL3_PIN = 0;
+      break;
+
+    default:
+      break;
+    }
+  }
+  else
+  { //close channel
+    CHANNEL1_PIN = 1;
+    CHANNEL2_PIN = 1;
+    CHANNEL3_PIN = 1;
+  }
+}
+
 void main(void)
 { 
-  // u16 advalue = 0, s1 = 0; 
-  const u8 DIG1_Dis[] = {0, BIT0_1}; 
+  u16 advalue = 0, s1 = 0, adtemp = 0; 
+  const u8 DIG1_Dis[] = {BIT7_1, BIT6_1}; 
   const u8 DIG2_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
   const u8 DIG3_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
-  u8 TaskNumber = 1, KeyValue = 0, BIOIntensity = 0;
+  u8 TaskNumber = 1, KeyValue = 0;
   u8 KeyUp = 1;
   // u8 *EEAddr = (u8 *)0x00004000;
 
@@ -91,19 +313,33 @@ void main(void)
   CLK_HSIPrescalerConfig(CLK_PRESCALER_HSIDIV1);
   
   //io init
-  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_SLOW);
-  GPIO_Init(GPIOD, GPIO_PIN_4, GPIO_MODE_OUT_PP_LOW_SLOW);
+  GPIO_Init(GPIOA, GPIO_PIN_3, GPIO_MODE_OUT_PP_LOW_SLOW); //HEAT
+  GPIO_Init(GPIOB, GPIO_PIN_5, GPIO_MODE_OUT_OD_LOW_SLOW); //LED
+  GPIO_Init(GPIOD, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_SLOW); //Channel 1
+  GPIO_Init(GPIOD, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_SLOW); //Channel 2
+  GPIO_Init(GPIOD, GPIO_PIN_6, GPIO_MODE_OUT_PP_HIGH_SLOW); //Channel 3
+  GPIO_Init(GPIOA, GPIO_PIN_1, GPIO_MODE_OUT_PP_HIGH_SLOW); //BIO S
+  GPIO_Init(GPIOA, GPIO_PIN_2, GPIO_MODE_OUT_PP_LOW_SLOW); //BIO A
 
-  Uart1Init(115200);
+  GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_IN_FL_NO_IT); //A
+  GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_IN_PU_NO_IT); //B
+  GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_IN_PU_NO_IT); //C
+  GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_IN_PU_NO_IT); //D
+  GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT); //E
+  GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT); //F
+  GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT); //G
+  GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT); //H
+
+  // Uart1Init(115200);
 // Tim1_Time_Upmode_conf(16, 1000, 0);
   //Timer4Init();       //Count 200us
-  Tim2_Time_Upmode_conf(4, 1000);        //f: 1us, 1ms Int
+  Tim2_Time_Upmode_conf(4, 100);        
   enableInterrupts();//Open main interrupt
 
   delay_init();
-  TIM1_PWM_Init(0, 8000, 0);
+  // TIM1_PWM_Init(0, 8000, 0);
   AD1Init();
-  TM1650_Init(3, 1);
+  // TM1650_Init(0, 1);
 
   // BIOIntensity = *EEAddr;
   // TempIntensity = *(EEAddr+1);
@@ -119,7 +355,7 @@ void main(void)
   //   FLASH_Lock(FLASH_MEMTYPE_DATA);
   // }
 
-  usart1_send_char(0X01); //version number
+  // usart1_send_char(0X01); //version number
  // ADC1_StartConversion();
 
 #ifndef DEBUG
@@ -154,10 +390,9 @@ void main(void)
         }
         case 2: //KEY GET AND DISPLAY
         {
-          // SMG_One_Display(DIG1, DIG1_Dis[FlagState.work]);
-          SMG_One_Display(DIG1, DIG1_Dis[1]);
-          SMG_One_Display(DIG2, DIG2_Dis[BIOIntensity]);
-          SMG_One_Display(DIG3, DIG3_Dis[TempIntensity]);
+          SMG_One_Display(DIG3, DIG1_Dis[FlagState.work]);
+          SMG_One_Display(DIG1, DIG2_Dis[BIOIntensity]);
+          SMG_One_Display(DIG2, DIG3_Dis[TempIntensity]);
           KeyValue = Key_Get();
           TaskNumber++;
           break;
@@ -209,27 +444,26 @@ void main(void)
         }
         case 4: //work process
         {
-          // if (++s1 >= 100) //1s
-          // {
-          //   s1 = 0;
-          //   for (u8 ioi = 0; ioi < 8; ioi++)
-          //   {
-          //     ADC1->CR1 |= ADC1_CR1_ADON; //start adc convert
-          //     while (!(ADC1->CSR & 0X80))
-          //       ;                     //check EOC flag
-          //     ADC1->CSR &= ~(1 << 7); //clear EOC flag
-          //     advalue += ADC1_GetConversionValue();
-          //   }
-          //   advalue = advalue >> 3;
-          //   usart1_send_char(advalue >> 8);
-          //   usart1_send_char((u8)advalue);
-          //   advalue = 0;
-          // }
+          if (++s1 >= 100) //1s
+          {
+            s1 = 0;
+            advalue = 0;
+            for (u8 ioi = 0; ioi < 8; ioi++)
+            {
+              set_ADCS; //start adc convert
+              while (ADCF == 0);           //check EOC flag
+              clr_ADCF; //clear EOC flag
+              adtemp = 0;
+              adtemp = ADCRH;
+              adtemp = (adtemp<<4)+ADCRL;
+              advalue += adtemp;
+            }
+            advalue = advalue >> 3; // x/8
+          }
 
           if(FlagState.work)
           {
-            TIM1_SetCompare3(BIO1IntensityTable[BIOIntensity]);   
-            LED_CON = LED_CON_OPEN; 
+            LED_CON = 1; 
             // if((*EEAddr!=BIOIntensity)||(*(EEAddr+1)!=TempIntensity))
             // {
             //   FLASH_Unlock(FLASH_MEMTYPE_DATA);
@@ -242,8 +476,7 @@ void main(void)
           }
           else
           {
-            TIM1_SetCompare3(BIO1IntensityTable[0]);
-            LED_CON = LED_CON_CLOSE;
+            LED_CON = 0;
           }     
           TaskNumber++;
           break;
