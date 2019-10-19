@@ -47,8 +47,8 @@ void SerialPort0_ISR(void) interrupt 4
 /*for printf*/
 char putchar (char c)  
 {
-    SBUF = c;
-    while (!TI);
     TI = 0;
+    SBUF = c;
+    while(TI==0);
     return c;
 }

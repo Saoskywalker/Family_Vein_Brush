@@ -6,4 +6,6 @@
 #include "types.h"
 #include "Function_Define.h"
 
+extern bit BIT_TMP;
+
 #endif

@@ -144,6 +144,8 @@ All function define inital setting file for Nuvoton N76E003
 #define P30_OpenDrain_Mode		P3M1|=SET_BIT0;P3M2|=SET_BIT0
 //--------- Define all port as quasi mode ---------
 #define Set_All_GPIO_Quasi_Mode			P0M1=0;P0M2=0;P1M1=0;P1M2=0;P3M1=0;P3M2=0
+//--------- Define all port as Only_Input mode ---------
+#define Set_All_GPIO_Only_Input_Mode	P0M1=0XFF;P0M2=0;P1M1=0XFF;P1M2=0;P3M1=0XFF;P3M2=0
 
 #define 		set_GPIO1		P12=1
 #define 		clr_GPIO1		P12=0

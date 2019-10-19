@@ -39,6 +39,7 @@ void AD1Init(void);
 #define BIOS_PIN P03
 #define BIOA_PIN P04
 #define POWER_PIN P20
+#define KEEP_PIN P17
 
 #define A_OUT_PIN P01
 #define B_OUT_PIN P00
@@ -99,10 +100,11 @@ extern u8 UART1BusyFlag;
 #define SMG_One_Display(ch, i) MCU_DK_Display(ch, i);
 
 //Key get
-#define KEY_TEMP 0X47
-#define KEY_START 0X4F
-#define KEY_BIO 0X57
-#define KEY_CHARGE 0X58
+#define KEY_TEMP 0X01
+#define KEY_START 0X02
+#define KEY_BIO 0X04
+#define KEY_CHARGE 0X08
+#define KEY_POWER_KEEP 0X10
 
 #define Key_Get() MCU_DK_Key();
 
@@ -116,4 +118,3 @@ void MCU_DK_SetLight(u8 i);
 void MCU_DK_DisAndKey_Handle(void);
 
 #endif
-

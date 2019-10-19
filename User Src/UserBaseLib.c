@@ -56,7 +56,7 @@ void Uart0Init(u32 u32Baudrate)
     //clr_TI;
     clr_RI;
 
-    set_ES;           //enable UART interrupt
+    //set_ES;           //enable UART interrupt //note:tx function must fix if use 
 }
 
 //Config 16bit
@@ -75,7 +75,9 @@ void Tim2_Time_Upmode_conf(uint16_t TIM2_Period)
 }
 
 volatile void Delay(uint16_t nCount) 
+{
   uint16_t i = nCount;
+
   while (nCount != 0)
   {
     nCount--;
@@ -225,5 +227,5 @@ void UART0SendBuf(u8 *SendBufAddr, u8 SendLen)
   SendBuffer = SendBufAddr;
   UART1BusyFlag = 1;
 //Send one Byte with UART0
-  Send_Data_To_UART0(*SendBuffer);
+  // Send_Data_To_UART0(*SendBuffer);
 }

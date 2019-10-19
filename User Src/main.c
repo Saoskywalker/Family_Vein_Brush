@@ -8,10 +8,11 @@ History:
 2019.6.1; OK
 2019.10.14: cannel tm1650, use mcu replace
 2019.10.15: implant from STM8S003 to N76E003
+2019.10.19: add battery function
 *****************************************************************************/ 
 
 /* Includes ------------------------------------------------------------------*/
-// #define DEBUG
+#define DEBUG
 #include "UserBaseLib.h"
 #include "delay.h"
 //#include <stdio.h>
@@ -58,7 +59,7 @@ void BIO1Power(u8 i, u8 Work)
 	
 	if(Work)
 	{
-		if(++BIO1TimeCnt>=77)
+		if(++BIO1TimeCnt>=75)
 		{
 			BIO1TimeCnt = 0;
 			BIO1ModRenew = i;
@@ -77,8 +78,8 @@ void BIO1Power(u8 i, u8 Work)
 
 //Heat
 u8 TempIntensity = 0;
-const u16 HeatIntensityTable[] = {0, 5, 7, 9, 12,
-																	15, 20, 25, 32};
+const u16 HeatIntensityTable[] = {0, 1, 2, 3, 4,
+																	5, 6, 7, 8};
 void HeatPWM(u8 i, u8 Work)
 {
 	static u16 HeatTimeCnt = 0;
@@ -86,7 +87,7 @@ void HeatPWM(u8 i, u8 Work)
 	
 	if(Work)
 	{
-		if(++HeatTimeCnt>=40)
+		if(++HeatTimeCnt>=8)
 		{
 			HeatTimeCnt = 0;
 			HeatModRenew = i;
@@ -104,7 +105,7 @@ void HeatPWM(u8 i, u8 Work)
 }
 
 /*MCU LED&KEY IO use together function model*/
-u8 MCU_DK_KeyData = 0, MCU_DK_DisLight = 30; //light relate to display period
+u8 MCU_DK_KeyData = 0, MCU_DK_DisLight = 10; //light relate to display period
 struct {
  u8 dat1;
  u8 dat2;
@@ -135,6 +136,7 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
 {
   static u8 step = 1, cnt = 0, ii = 0;
   static u8 keyCnt1 = 0, keyCnt2 = 0, keyCnt3 = 0, keyCnt4 = 0;
+  static u16 KeyStartCnt = 0;
 
   if(++cnt>=50) //period 50Hz
   {
@@ -163,6 +165,14 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
       F_OUT_PIN = 1;
       G_OUT_PIN = 1;
       H_OUT_PIN = 1;
+      P01_Quasi_Mode; 
+      P00_Quasi_Mode; 
+      P10_Quasi_Mode; 
+      P11_Quasi_Mode; 
+      P12_Quasi_Mode; 
+      P13_Quasi_Mode; 
+      P14_Quasi_Mode; 
+      P15_Quasi_Mode;
 
       //close channel
       CHANNEL1_PIN = 1;
@@ -187,6 +197,14 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
       F_OUT_PIN = LED_CLOSE;
       G_OUT_PIN = LED_CLOSE;
       H_OUT_PIN = LED_CLOSE;
+      P01_PushPull_Mode;
+      P00_PushPull_Mode;
+      P10_PushPull_Mode;
+      P11_PushPull_Mode;
+      P12_PushPull_Mode;
+      P13_PushPull_Mode;
+      P14_PushPull_Mode;
+      P15_PushPull_Mode;
 
       //close channel
       CHANNEL1_PIN = 1;
@@ -248,39 +266,43 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     
   if(step==4) //scan key, note key scan time: 1/4 period
   {
+    MCU_DK_KeyData = 0;
+    if(POWER_PIN==1)
+    {
+      if(++keyCnt2>=20) //sensibility
+      {
+        keyCnt2 = 20;
+        MCU_DK_KeyData += KEY_START;
+        if(++KeyStartCnt>=3000) //3s
+        {
+          KeyStartCnt = 3000;
+          MCU_DK_KeyData += KEY_POWER_KEEP;
+        }
+      }
+    }
+    else
+    {
+      keyCnt2 = 0;
+      KeyStartCnt = 0;
+    }
     if(A_IN_PIN==0)
     {
-      if(++keyCnt1>=45) //sensibility
+      if(++keyCnt1>=20) //sensibility
       {
-        keyCnt1 = 45;
-        MCU_DK_KeyData = KEY_TEMP;
-        return;
+        keyCnt1 = 20;
+        MCU_DK_KeyData += KEY_TEMP;
       }
     }
     else
     {
       keyCnt1 = 0;
     }
-    if(POWER_PIN==0)
-    {
-      if(++keyCnt2>=45) //sensibility
-      {
-        keyCnt2 = 45;
-        MCU_DK_KeyData = KEY_START;
-        return;
-      }
-    }
-    else
-    {
-      keyCnt2 = 0;
-    }
     if(B_IN_PIN==0)
     {
-      if(++keyCnt3>=45) //sensibility
+      if(++keyCnt3>=20) //sensibility
       {
-        keyCnt3 = 45;
-        MCU_DK_KeyData = KEY_BIO;
-        return;
+        keyCnt3 = 20;
+        MCU_DK_KeyData += KEY_BIO;
       }
     }
     else
@@ -289,18 +311,16 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
     }
     if(H_IN_PIN==0)
     {
-      if(++keyCnt4>=45) //sensibility
+      if(++keyCnt4>=20) //sensibility
       {
-        keyCnt4 = 45;
-        MCU_DK_KeyData = KEY_CHARGE;
-        return;
+        keyCnt4 = 20;
+        MCU_DK_KeyData += KEY_CHARGE;
       }
     }
     else
     {
       keyCnt4 = 0;
     }
-    MCU_DK_KeyData = 0;
   }
   else if (cnt < MCU_DK_DisLight) //scan display
   {
@@ -332,24 +352,27 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
 
 void main(void)
 { 
-  u16 advalue = 0, s1 = 0, adtemp = 0; 
-  const u8 DIG1_Dis[] = {BIT7_1, BIT6_1}; 
+  u16 advalue = 0, s1 = 0, adtemp = 0, VolLowCnt = 0, ChaLowCnt = 0; 
+  const u8 DIG3_Dis[] = {0, BIT1_1, BIT0_1, 0X03}; 
+  u8 DIG3_Dis_Temp = 0;
   const u8 DIG2_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
-  const u8 DIG3_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
+  const u8 DIG1_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
   u8 TaskNumber = 1, KeyValue = 0;
-  u8 KeyUp = 1;
+  u8 KeyUp = 0, KeyT = 0;
+  u8 averageCnt = 0;
   
+  P17_PushPull_Mode; KEEP_PIN = 1; //power kepp
   //io init 
   //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
-  set_P2S_0; //POWER KEY, up pull mode
+  clr_P2S_0; //POWER KEY, HIZ mode
   // Quasi-Bidirectional MODE
   P30_Quasi_Mode; HEAT_PIN = 0; //HEAT
   P02_Quasi_Mode; LED_CON = 0; //LED
-  P06_Quasi_Mode; CHANNEL1_PIN = 1; //Channel 1
-  P07_Quasi_Mode; CHANNEL2_PIN = 1; //Channel 2
-  P16_Quasi_Mode; CHANNEL3_PIN = 1; //Channel 3
-  P03_Quasi_Mode; BIOS_PIN = 1; //BIO S
-  P04_Quasi_Mode; BIOA_PIN = 0;//BIO A
+  P06_PushPull_Mode; CHANNEL1_PIN = 1; //Channel 1
+  P07_PushPull_Mode; CHANNEL2_PIN = 1; //Channel 2
+  P16_PushPull_Mode; CHANNEL3_PIN = 1; //Channel 3
+  P03_PushPull_Mode; BIOS_PIN = 1; //BIO S
+  P04_PushPull_Mode; BIOA_PIN = 0;//BIO A
 
   P01_Quasi_Mode; A_OUT_PIN = LED_CLOSE; //A
   P00_Quasi_Mode; B_OUT_PIN = LED_CLOSE; //B
@@ -361,13 +384,39 @@ void main(void)
   P15_Quasi_Mode; H_OUT_PIN = LED_CLOSE; //H
 
   // Uart1Init(115200);
-  Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);        
+  Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
   // delay_init();
   // PWM_Init(0x7CF, 0);
   AD1Init();
   // TM1650_Init(0, 1);
+
+  //check voltage
+  advalue = 0;
+  for (averageCnt = 0; averageCnt < 8; averageCnt++)
+  {
+    set_ADCS; //start adc convert
+    while (ADCF == 0);           //check EOC flag
+    clr_ADCF; //clear EOC flag
+    adtemp = 0;
+    adtemp = ADCRH;
+    adtemp = (adtemp<<4)+ADCRL;
+    advalue += adtemp;
+  }
+  advalue = advalue >> 3; // x/8
+  if((advalue>=4080)||(advalue<=1000)) //ERROR
+  {
+    while (1)
+    {
+      SMG_One_Display(DIG1, 0X00);
+      delay_ms(500);
+      SMG_One_Display(DIG1, 0XFF);
+      delay_ms(500);
+    }
+  }
+
+  delay_ms(100);
 
 #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
@@ -391,32 +440,73 @@ void main(void)
         }
         case 2: //KEY GET AND DISPLAY
         {
-          SMG_One_Display(DIG3, DIG1_Dis[FlagState.work]);
+          DIG3_Dis_Temp = 0;
+          if((KeyValue&KEY_CHARGE)==KEY_CHARGE)
+          {
+            if(++ChaLowCnt>=20)
+            {
+              ChaLowCnt = 0;
+              DIG3_Dis_Temp |= DIG3_Dis[1];
+            }   
+            else
+            {
+              DIG3_Dis_Temp &= ~DIG3_Dis[1];
+            }
+          }
+          else
+          {
+            DIG3_Dis_Temp |= DIG3_Dis[1];
+          }
+          
+          if(FlagState.work)
+          {
+            DIG3_Dis_Temp |= DIG3_Dis[2];
+            if(advalue<=2908) //voltage low, about 7.1V
+            {
+              if(++VolLowCnt>=7)
+              {
+                VolLowCnt = 0;
+                DIG3_Dis_Temp |= DIG3_Dis[2];
+              }   
+              else
+              {
+                DIG3_Dis_Temp &= ~DIG3_Dis[2];
+              }
+            } 
+          }
+          else
+          {
+            DIG3_Dis_Temp &= ~DIG3_Dis[2];
+          }
+          
+          SMG_One_Display(DIG3, DIG3_Dis_Temp);
           SMG_One_Display(DIG2, DIG2_Dis[BIOIntensity]);
-          SMG_One_Display(DIG1, DIG3_Dis[TempIntensity]);
+          SMG_One_Display(DIG1, DIG1_Dis[TempIntensity]);
           KeyValue = Key_Get();
           TaskNumber++;
           break;
         }
         case 3: //key process
         {       
-          if(KeyValue!=KEY_START&&KeyValue!=KEY_BIO&&KeyValue!=KEY_TEMP)
+          if((KeyValue&KEY_START)!=KEY_START&&(KeyValue&KEY_BIO)!=KEY_BIO&&(KeyValue&KEY_TEMP)!=KEY_TEMP)
           {
             KeyUp = 1;
           }   
-          if((KeyValue==KEY_START)&&KeyUp)
+          if(((KeyValue&KEY_POWER_KEEP)==KEY_POWER_KEEP))
+          {
+            KEEP_PIN = 0; //close keep voltage, after releasing key, it will close
+            Set_All_GPIO_Only_Input_Mode;
+          }
+          
+          if(((KeyValue&KEY_START)==KEY_START)&&KeyUp)
           {
             KeyUp = 0;
             if(FlagState.work)
-            {
               FlagState.work = 0;
-            }
             else
-            {
-              FlagState.work = 1;
-            }          
+              FlagState.work = 1;  
           }
-          else if((KeyValue==KEY_BIO)&&KeyUp)
+          else if(((KeyValue&KEY_BIO)==KEY_BIO)&&KeyUp)
           {           
             KeyUp = 0;
             if(BIOIntensity==8)
@@ -428,7 +518,7 @@ void main(void)
               BIOIntensity++;
             }     
           }
-          else if((KeyValue==KEY_TEMP)&&KeyUp)
+          else if(((KeyValue&KEY_TEMP)==KEY_TEMP)&&KeyUp)
           {
             KeyUp = 0;
             if(TempIntensity==8)
@@ -449,7 +539,7 @@ void main(void)
           {
             s1 = 0;
             advalue = 0;
-            for (u8 ioi = 0; ioi < 8; ioi++)
+            for (averageCnt = 0; averageCnt < 8; averageCnt++)
             {
               set_ADCS; //start adc convert
               while (ADCF == 0);           //check EOC flag
