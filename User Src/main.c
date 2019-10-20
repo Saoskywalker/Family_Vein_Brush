@@ -24,8 +24,8 @@ History:
 
 //BIO1 PWM
 u8 BIOIntensity = 0;
-const u16 BIO1IntensityTable[] = {0, 21, 22, 23, 24, 25,
-																	26, 27, 28};
+const u16 BIO1IntensityTable[] = {0, 36, 38, 40, 42, 44,
+																	46, 48, 50};
 const u16 BIO1ModPeriod[] = {11, 330, 400};
 const u16 BIO1ModCompare[] = {3, 2, 240};	
 void BIO1PWM(u8 i, u8 Work)
@@ -105,7 +105,7 @@ void HeatPWM(u8 i, u8 Work)
 }
 
 /*MCU LED&KEY IO use together function model*/
-u8 MCU_DK_KeyData = 0, MCU_DK_DisLight = 10; //light relate to display period
+u8 MCU_DK_KeyData = 0, MCU_DK_DisLight = 3; //light relate to display period
 struct {
  u8 dat1;
  u8 dat2;
