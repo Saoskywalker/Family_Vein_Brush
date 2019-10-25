@@ -502,9 +502,15 @@ void main(void)
           {
             KeyUp = 0;
             if(FlagState.work)
+            {
+              TempIntensity = 0;
+              BIOIntensity = 0;
               FlagState.work = 0;
+            }
             else
-              FlagState.work = 1;  
+            {
+              FlagState.work = 1; 
+            } 
           }
           else if(((KeyValue&KEY_BIO)==KEY_BIO)&&KeyUp)
           {           
@@ -550,6 +556,23 @@ void main(void)
               advalue += adtemp;
             }
             advalue = advalue >> 3; // x/8
+            if(advalue<=2662) //battery no power, about 6.5V
+            {
+              SMG_One_Display(DIG2, DIG2_Dis[8]);
+              SMG_One_Display(DIG1, DIG1_Dis[8]);
+              delay_ms(500);
+              SMG_One_Display(DIG2, DIG2_Dis[0]);
+              SMG_One_Display(DIG1, DIG1_Dis[0]);
+              delay_ms(500);
+              SMG_One_Display(DIG2, DIG2_Dis[8]);
+              SMG_One_Display(DIG1, DIG1_Dis[8]);
+              delay_ms(500);
+              SMG_One_Display(DIG2, DIG2_Dis[0]);
+              SMG_One_Display(DIG1, DIG1_Dis[0]);
+              delay_ms(500);
+              KEEP_PIN = 0; //close keep voltage, after releasing key, it will close
+              Set_All_GPIO_Only_Input_Mode;
+            }
           }
 
           if(FlagState.work)
