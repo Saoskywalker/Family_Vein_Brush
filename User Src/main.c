@@ -451,19 +451,6 @@ void main(void)
         case 2: //KEY GET AND DISPLAY
         {
           DIG3_Dis_Temp = 0;
-          if((KeyValue&KEY_CHARGE)==KEY_CHARGE)
-          {
-            if(++ChaLowCnt>=100)
-              ChaLowCnt = 0;
-            if(ChaLowCnt<50)
-              DIG3_Dis_Temp |= DIG3_Dis[1];
-            else
-              DIG3_Dis_Temp &= ~DIG3_Dis[1];
-          }
-          else
-          {
-            DIG3_Dis_Temp |= DIG3_Dis[1];
-          }
           
           if(FlagState.work)
           {
@@ -481,6 +468,20 @@ void main(void)
           else
           {
             DIG3_Dis_Temp &= ~DIG3_Dis[2];
+
+            if((KeyValue&KEY_CHARGE)==KEY_CHARGE)
+            {
+              if(++ChaLowCnt>=100)
+                ChaLowCnt = 0;
+              if(ChaLowCnt<50)
+                DIG3_Dis_Temp |= DIG3_Dis[1];
+              else
+                DIG3_Dis_Temp &= ~DIG3_Dis[1];
+            }
+            else
+            {
+              DIG3_Dis_Temp |= DIG3_Dis[1];
+            }
           }
           
           SMG_One_Display(DIG3, DIG3_Dis_Temp);
