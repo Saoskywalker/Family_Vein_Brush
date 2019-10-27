@@ -12,7 +12,7 @@ History:
 *****************************************************************************/ 
 
 /* Includes ------------------------------------------------------------------*/
-#define DEBUG
+// #define DEBUG
 #include "UserBaseLib.h"
 #include "delay.h"
 //#include <stdio.h>
@@ -352,7 +352,8 @@ void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion
 
 void main(void)
 { 
-  u16 advalue = 0, s1 = 0, adtemp = 0, VolLowCnt = 0, ChaLowCnt = 0; 
+  u16 advalue = 0, s1 = 0, adtemp = 0; 
+  u8 VolLowCnt = 0, ChaLowCnt = 0;
   const u8 DIG3_Dis[] = {0, BIT1_1, BIT0_1, 0X03}; 
   u8 DIG3_Dis_Temp = 0;
   const u8 DIG2_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
@@ -382,6 +383,10 @@ void main(void)
   P13_Quasi_Mode; F_OUT_PIN = LED_CLOSE; //F
   P14_Quasi_Mode; G_OUT_PIN = LED_CLOSE; //G
   P15_Quasi_Mode; H_OUT_PIN = LED_CLOSE; //H
+
+  #ifndef DEBUG
+  IWDG_Configuration(); //Open IWDG
+  #endif
 
   // Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
@@ -418,9 +423,14 @@ void main(void)
 
   delay_ms(100);
 
-#ifndef DEBUG
-  IWDG_Configuration(); //Open IWDG
-#endif
+  KeyValue = Key_Get(); //display version
+  if((KeyValue&KEY_BIO)==KEY_BIO&&(KeyValue&KEY_TEMP)==KEY_TEMP) 
+  {
+    //2.0
+    SMG_One_Display(DIG2, DIG2_Dis[2]);
+    SMG_One_Display(DIG1, DIG1_Dis[0]);
+    delay_ms(2000);
+  }
   
   while (1)
   {
@@ -443,15 +453,12 @@ void main(void)
           DIG3_Dis_Temp = 0;
           if((KeyValue&KEY_CHARGE)==KEY_CHARGE)
           {
-            if(++ChaLowCnt>=20)
-            {
+            if(++ChaLowCnt>=100)
               ChaLowCnt = 0;
+            if(ChaLowCnt<50)
               DIG3_Dis_Temp |= DIG3_Dis[1];
-            }   
             else
-            {
               DIG3_Dis_Temp &= ~DIG3_Dis[1];
-            }
           }
           else
           {
@@ -461,17 +468,14 @@ void main(void)
           if(FlagState.work)
           {
             DIG3_Dis_Temp |= DIG3_Dis[2];
-            if(advalue<=2908) //voltage low, about 7.1V
+            if(advalue<=2785&&(KeyValue&KEY_CHARGE)!=KEY_CHARGE) //voltage low, about 6.8V
             {
-              if(++VolLowCnt>=7)
-              {
+              if(++VolLowCnt>=30)
                 VolLowCnt = 0;
-                DIG3_Dis_Temp |= DIG3_Dis[2];
-              }   
+              if(VolLowCnt<15)
+                DIG3_Dis_Temp |= DIG3_Dis[2];   
               else
-              {
                 DIG3_Dis_Temp &= ~DIG3_Dis[2];
-              }
             } 
           }
           else
@@ -555,8 +559,8 @@ void main(void)
               adtemp = (adtemp<<4)+ADCRL;
               advalue += adtemp;
             }
-            advalue = advalue >> 3; // x/8
-            if(advalue<=2662) //battery no power, about 6.5V
+            advalue = advalue >> 3; // x/8 
+            if(advalue<=2703&&(KeyValue&KEY_CHARGE)!=KEY_CHARGE) //battery no power, about 6.6V
             {
               SMG_One_Display(DIG2, DIG2_Dis[8]);
               SMG_One_Display(DIG1, DIG1_Dis[8]);
@@ -564,6 +568,9 @@ void main(void)
               SMG_One_Display(DIG2, DIG2_Dis[0]);
               SMG_One_Display(DIG1, DIG1_Dis[0]);
               delay_ms(500);
+              #ifndef DEBUG
+                IWDG_Feed;  //Clear IWDG cnt
+              #endif
               SMG_One_Display(DIG2, DIG2_Dis[8]);
               SMG_One_Display(DIG1, DIG1_Dis[8]);
               delay_ms(500);
