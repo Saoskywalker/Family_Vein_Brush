@@ -311,7 +311,7 @@
               <MiscControls></MiscControls>
               <Define>FOSC_160000</Define>
               <Undefine></Undefine>
-              <IncludePath>.\User Inc;.\N76E003\Include;.\Library\delay</IncludePath>
+              <IncludePath>.\User Inc;.\N76E003\Include;.\Library\delay;.\Library\TM1650</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -402,6 +402,11 @@
               <FileName>delay.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Library\delay\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>TM1650.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\TM1650\TM1650.c</FilePath>
             </File>
           </Files>
         </Group>

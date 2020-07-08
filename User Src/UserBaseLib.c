@@ -33,6 +33,51 @@ void AD1Init(void)
   clr_ADCF;
 }
 
+u16 AD1Sample(u8 channel)
+{
+  u16 advalue = 0, adtemp = 0; 
+  u8 averageCnt = 0;
+  
+  //change Fose frequency to 4MHz, in order to reduce AD sample, raise steady
+  //CKDIV = 0x02;
+
+  if (channel == 4)
+  {
+    Enable_ADC_AIN4;
+  }
+  else if (channel == 0)
+  {
+    Enable_ADC_AIN0;
+  }
+  else if (channel == 1)
+  {
+    Enable_ADC_AIN1;
+  }
+  else
+  {
+    return 0;
+  }
+
+  advalue = 0;
+  for (averageCnt = 0; averageCnt < 8; averageCnt++)
+  {
+    set_ADCS; //start adc convert
+    while (ADCF == 0)
+      ;       //check EOC flag
+    clr_ADCF; //clear EOC flag
+    adtemp = 0;
+    adtemp = ADCRH;
+    adtemp = (adtemp << 4) + ADCRL;
+    advalue += adtemp;
+  }
+  advalue = advalue >> 3; // x/8
+
+  Disable_ADC; //close ADC
+  //CKDIV = 0x00; //recovery frequency
+  
+  return advalue;
+}
+
 void Uart0Init(u32 u32Baudrate) 
 {
   P06_Quasi_Mode;		//Setting UART pin as Quasi mode for transmit
@@ -219,6 +264,22 @@ _StateBit FlagState = {0, 0, 0, 0, 0, 0, 0, 0};
 //     FLASH_Lock(FLASH_MEMTYPE_DATA);
 //   }
 // }
+
+u8 ReceiveData_UART0(void)
+{
+  u8 c;
+  while (!RI);
+  c = SBUF;
+  RI = 0;
+  return (c);
+}
+
+void SendData_UART0(u8 c)
+{
+  TI = 0;
+  SBUF = c;
+  while (TI == 0);
+}
 
 //UART send Buffer
 void UART0SendBuf(u8 *SendBufAddr, u8 SendLen)

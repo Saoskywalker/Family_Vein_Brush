@@ -15,6 +15,7 @@ History:
 // #define DEBUG
 #include "UserBaseLib.h"
 #include "delay.h"
+#include "TM1650.h"
 //#include <stdio.h>
 // #include "UART_Frame.h"
 
@@ -22,7 +23,7 @@ History:
 
 /* Private function prototypes -----------------------------------------------*/
 
-//BIO1 PWM
+/* //BIO1 PWM
 u8 BIOIntensity = 0;
 const u16 BIO1IntensityTable[] = {0, 36, 38, 40, 42, 44,
 																	46, 48, 50};
@@ -74,13 +75,62 @@ void BIO1Power(u8 i, u8 Work)
 		BIO1TimeCnt = 0;
 		BIOA_PIN = 0;
 	}
+} */
+
+/*Bee function*/
+const u16 BeeModPeriod[] = {110, 410, 1000, 1010, 3010};
+const u16 BeeModCompare[] = {100, 400, 500, 1000, 3000};
+u8 BeeMod = 0, BeeTime = 0;
+void BeeFunction(void)
+{
+	static u16 BeeTimeCnt = 0;
+
+	if (BeeTime > 0)
+	{
+		if (++BeeTimeCnt >= BeeModPeriod[BeeMod])
+		{
+			BeeTimeCnt = 0;
+			BeeTime--;
+		}
+		else
+		{
+			if (BeeTimeCnt >= BeeModCompare[BeeMod])
+				SOUND_PIN = 0;
+			else
+				SOUND_PIN = 1;
+		}
+	}
+	else
+	{
+		BeeTimeCnt = 0;
+		SOUND_PIN = 0;
+	}
+}
+
+u16 WorkTime = 0;
+void WorkTimeDeal(void)
+{
+	if (FlagState.s1)
+	{
+			FlagState.s1 = 0;
+			if (WorkTime > 0)
+			{
+				WorkTime--;
+			}
+			else
+			{
+				INLINE_MUSIC_STOP();
+				WorkTime = 900;
+				FlagState.work = 0;
+			}
+	}
 }
 
 //Heat
-u8 TempIntensity = 0;
+u8 TempIntensity = 1;
 const u16 HeatIntensityTable[] = {0, 1, 2, 3, 4,
 																	5, 6, 7, 8};
-void HeatPWM(u8 i, u8 Work)
+/* void HeatPWM(u8 i, u8 Work)
 {
 	static u16 HeatTimeCnt = 0;
 	static u8 HeatModRenew = 0;
@@ -102,336 +152,126 @@ void HeatPWM(u8 i, u8 Work)
 		HeatTimeCnt = 0;
 		HEAT_PIN = 0;	//ON
 	}
+} */
+
+//Temperature Process
+const u16 TemperatureTable[] = {0, 1396, 1296, 1196, 1096,
+								996, 796, 596, 498};
+u16 Temperature1 = 0;
+static u8 Ntc1ErrorFlag = 0;
+void TemperatureProcess1(void)
+{
+	static u16 i = 0;
+	
+	//NTC ERROR
+	if(Temperature1>=4000||Temperature1<=100)
+	{
+		if(++i>=10000)
+		{
+			i = 10000;
+			if(Ntc1ErrorFlag==0)
+			{
+				Ntc1ErrorFlag = 1;
+        INLINE_MUSIC_ERROR();
+				LAMP2_PIN = 0;
+			}			
+		}
+	}
+	else
+	{
+		if (i>=25)
+			i -= 25;
+		else
+			i = 0;
+		if(i==0)
+			Ntc1ErrorFlag = 0;
+
+		if(Temperature1>=TemperatureTable[TempIntensity]+16)
+			LAMP2_PIN = 1;
+		if(Temperature1<=TemperatureTable[TempIntensity])
+			LAMP2_PIN = 0;
+	}
 }
 
-/*MCU LED&KEY IO use together function model*/
-u8 MCU_DK_KeyData = 0, MCU_DK_DisLight = 3; //light relate to display period
-struct {
- u8 dat1;
- u8 dat2;
- u8 dat3;
-}DisStruct;
-
-void MCU_DK_Display(u8 ch,u8 dat) //set SMG display
+u16 Temperature2 = 0;
+static u8 Ntc2ErrorFlag = 0;
+void TemperatureProcess2(void)
 {
-  if(ch==DIG1)
-    DisStruct.dat1 = dat;
-  else if(ch==DIG2)
-    DisStruct.dat2 = dat;
-  else if(ch==DIG3)
-    DisStruct.dat3 = dat;
+	static u16 i = 0;
+	
+	//NTC ERROR
+	if(Temperature2>=4000||Temperature2<=100)
+	{
+		if(++i>=10000)
+		{
+			i = 10000;
+			if(Ntc2ErrorFlag==0)
+			{
+				Ntc2ErrorFlag = 1;
+        INLINE_MUSIC_ERROR();
+				LAMP1_PIN = 0;
+			}			
+		}
+	}
+	else
+	{
+		if (i>=25)
+			i -= 25;
+		else
+			i = 0;
+		if(i==0)
+			Ntc2ErrorFlag = 0;
+
+		if(Temperature2>=TemperatureTable[TempIntensity]+16)
+			LAMP1_PIN = 1;
+		if(Temperature2<=TemperatureTable[TempIntensity])
+			LAMP1_PIN = 0;
+	}
 }
 
-u8 MCU_DK_Key(void)	  //key scan
+u16 Pressure = 0;
+void PressureProcess(void)
 {
-  return MCU_DK_KeyData;
-}
 
-void MCU_DK_SetLight(u8 i) //back light
-{
-  MCU_DK_DisLight = i;
-}
-
-void MCU_DK_DisAndKey_Handle(void) //note: put at timer funtion 
-{
-  static u8 step = 1, cnt = 0, ii = 0;
-  static u8 keyCnt1 = 0, keyCnt2 = 0, keyCnt3 = 0, keyCnt4 = 0;
-  static u16 KeyStartCnt = 0;
-
-  if(++cnt>=50) //period 50Hz
-  {
-    cnt = 0;
-    if(++step>4)
-      step = 1;
-    if(step>=4) //A~H become input
-    {
-      keyCnt1 = 0; //clear cnt
-      keyCnt2 = 0;
-      keyCnt3 = 0;
-      keyCnt4 = 0;
-      // GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_IN_FL_NO_IT); //A
-      // GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_IN_PU_NO_IT); //B
-      // GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_IN_PU_NO_IT); //C
-      // GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_IN_PU_NO_IT); //D
-      // GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_IN_PU_NO_IT); //E
-      // GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_IN_PU_NO_IT); //F
-      // GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_IN_PU_NO_IT); //G
-      // GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_IN_PU_NO_IT); //H
-      A_OUT_PIN = 1;
-      B_OUT_PIN = 1;
-      C_OUT_PIN = 1;
-      D_OUT_PIN = 1;
-      E_OUT_PIN = 1;
-      F_OUT_PIN = 1;
-      G_OUT_PIN = 1;
-      H_OUT_PIN = 1;
-      P01_Quasi_Mode; 
-      P00_Quasi_Mode; 
-      P10_Quasi_Mode; 
-      P11_Quasi_Mode; 
-      P12_Quasi_Mode; 
-      P13_Quasi_Mode; 
-      P14_Quasi_Mode; 
-      P15_Quasi_Mode;
-
-      //close channel
-      CHANNEL1_PIN = 1;
-      CHANNEL2_PIN = 1;
-      CHANNEL3_PIN = 1;
-    }
-    else //A~H become output
-    {
-      // GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_OUT_OD_HIZ_SLOW); //A
-      // GPIO_Init(GPIOC, GPIO_PIN_3, GPIO_MODE_OUT_PP_HIGH_SLOW); //B
-      // GPIO_Init(GPIOC, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_SLOW); //C
-      // GPIO_Init(GPIOC, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_SLOW); //D
-      // GPIO_Init(GPIOC, GPIO_PIN_6, GPIO_MODE_OUT_PP_HIGH_SLOW); //E
-      // GPIO_Init(GPIOC, GPIO_PIN_7, GPIO_MODE_OUT_PP_HIGH_SLOW); //F
-      // GPIO_Init(GPIOD, GPIO_PIN_1, GPIO_MODE_OUT_PP_HIGH_SLOW); //G
-      // GPIO_Init(GPIOD, GPIO_PIN_2, GPIO_MODE_OUT_PP_HIGH_SLOW); //H
-      A_OUT_PIN = LED_CLOSE;
-      B_OUT_PIN = LED_CLOSE;
-      C_OUT_PIN = LED_CLOSE;
-      D_OUT_PIN = LED_CLOSE;
-      E_OUT_PIN = LED_CLOSE;
-      F_OUT_PIN = LED_CLOSE;
-      G_OUT_PIN = LED_CLOSE;
-      H_OUT_PIN = LED_CLOSE;
-      P01_PushPull_Mode;
-      P00_PushPull_Mode;
-      P10_PushPull_Mode;
-      P11_PushPull_Mode;
-      P12_PushPull_Mode;
-      P13_PushPull_Mode;
-      P14_PushPull_Mode;
-      P15_PushPull_Mode;
-
-      //close channel
-      CHANNEL1_PIN = 1;
-      CHANNEL2_PIN = 1;
-      CHANNEL3_PIN = 1;
-
-      //renew display data
-    switch (step)
-    {
-    case 1: 
-      ii = DisStruct.dat1;
-      break;
-
-    case 2:
-      ii = DisStruct.dat2;
-      break;
-
-    case 3:
-      ii = DisStruct.dat3;
-      break;
-
-    default:
-      break;
-    }
-    if (ii & 0X01)
-      A_OUT_PIN = LED_OPEN;
-    else
-      A_OUT_PIN = LED_CLOSE;
-    if (ii & 0X02)
-      B_OUT_PIN = LED_OPEN;
-    else
-      B_OUT_PIN = LED_CLOSE;
-    if (ii & 0X04)
-      C_OUT_PIN = LED_OPEN;
-    else
-      C_OUT_PIN = LED_CLOSE;
-    if (ii & 0X08)
-      D_OUT_PIN = LED_OPEN;
-    else
-      D_OUT_PIN = LED_CLOSE;
-    if (ii & 0X10)
-      E_OUT_PIN = LED_OPEN;
-    else
-      E_OUT_PIN = LED_CLOSE;
-    if (ii & 0X20)
-      F_OUT_PIN = LED_OPEN;
-    else
-      F_OUT_PIN = LED_CLOSE;
-    if (ii & 0X40)
-      G_OUT_PIN = LED_OPEN;
-    else
-      G_OUT_PIN = LED_CLOSE;
-    if (ii & 0X80)
-      H_OUT_PIN = LED_OPEN;
-    else
-      H_OUT_PIN = LED_CLOSE;
-    }  
-  }
-    
-  if(step==4) //scan key, note key scan time: 1/4 period
-  {
-    MCU_DK_KeyData = 0;
-    if(POWER_PIN==1)
-    {
-      if(++keyCnt2>=20) //sensibility
-      {
-        keyCnt2 = 20;
-        MCU_DK_KeyData += KEY_START;
-        if(++KeyStartCnt>=3000) //3s
-        {
-          KeyStartCnt = 3000;
-          MCU_DK_KeyData += KEY_POWER_KEEP;
-        }
-      }
-    }
-    else
-    {
-      keyCnt2 = 0;
-      KeyStartCnt = 0;
-    }
-    if(A_IN_PIN==0)
-    {
-      if(++keyCnt1>=20) //sensibility
-      {
-        keyCnt1 = 20;
-        MCU_DK_KeyData += KEY_TEMP;
-      }
-    }
-    else
-    {
-      keyCnt1 = 0;
-    }
-    if(B_IN_PIN==0)
-    {
-      if(++keyCnt3>=20) //sensibility
-      {
-        keyCnt3 = 20;
-        MCU_DK_KeyData += KEY_BIO;
-      }
-    }
-    else
-    {
-      keyCnt3 = 0;
-    }
-    if(H_IN_PIN==0)
-    {
-      if(++keyCnt4>=20) //sensibility
-      {
-        keyCnt4 = 20;
-        MCU_DK_KeyData += KEY_CHARGE;
-      }
-    }
-    else
-    {
-      keyCnt4 = 0;
-    }
-  }
-  else if (cnt < MCU_DK_DisLight) //scan display
-  {
-    switch (step)
-    {
-    case 1: 
-      CHANNEL1_PIN = 0;
-      break;
-
-    case 2:
-      CHANNEL2_PIN = 0;
-      break;
-
-    case 3:
-      CHANNEL3_PIN = 0;
-      break;
-
-    default:
-      break;
-    }
-  }
-  else
-  { //close channel
-    CHANNEL1_PIN = 1;
-    CHANNEL2_PIN = 1;
-    CHANNEL3_PIN = 1;
-  }
 }
 
 void main(void)
 { 
-  u16 advalue = 0, s1 = 0, adtemp = 0; 
-  u8 VolLowCnt = 0, ChaLowCnt = 0;
-  const u8 DIG3_Dis[] = {0, BIT1_1, BIT0_1, 0X03}; 
   u8 DIG3_Dis_Temp = 0;
-  const u8 DIG2_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
-  const u8 DIG1_Dis[] = {0, 0X01, 0X03, 0X07, 0X0F, 0X1F, 0X3F, 0X7F, 0XFF}; 
+  u8 DIG2_Dis; 
+  const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0X02}; 
   u8 TaskNumber = 1, KeyValue = 0;
   u8 KeyUp = 0, KeyT = 0;
-  u8 averageCnt = 0;
+  u8 mode = 0;
   
-  P17_PushPull_Mode; KEEP_PIN = 1; //power kepp
   //io init 
   //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
   clr_P2S_0; //POWER KEY, HIZ mode
-  // Quasi-Bidirectional MODE
-  P30_Quasi_Mode; HEAT_PIN = 0; //HEAT
-  P02_Quasi_Mode; LED_CON = 0; //LED
-  P06_PushPull_Mode; CHANNEL1_PIN = 1; //Channel 1
-  P07_PushPull_Mode; CHANNEL2_PIN = 1; //Channel 2
-  P16_PushPull_Mode; CHANNEL3_PIN = 1; //Channel 3
-  P03_PushPull_Mode; BIOS_PIN = 1; //BIO S
-  P04_PushPull_Mode; BIOA_PIN = 0;//BIO A
 
-  P01_Quasi_Mode; A_OUT_PIN = LED_CLOSE; //A
-  P00_Quasi_Mode; B_OUT_PIN = LED_CLOSE; //B
-  P10_Quasi_Mode; C_OUT_PIN = LED_CLOSE; //C
-  P11_Quasi_Mode; D_OUT_PIN = LED_CLOSE; //D
-  P12_Quasi_Mode; E_OUT_PIN = LED_CLOSE; //E
-  P13_Quasi_Mode; F_OUT_PIN = LED_CLOSE; //F
-  P14_Quasi_Mode; G_OUT_PIN = LED_CLOSE; //G
-  P15_Quasi_Mode; H_OUT_PIN = LED_CLOSE; //H
+  P00_PushPull_Mode; LAMP2_PIN = 0; 
+  P01_PushPull_Mode; MOTOR1_PIN = 0; 
+  P03_PushPull_Mode; PUMPL_PIN = 0; 
+  P04_PushPull_Mode; PUMPR_PIN = 0; 
+  P10_PushPull_Mode; LAMP1_PIN = 0;
+  P11_PushPull_Mode; SOLENOLDS_PIN = 0;
+  P12_PushPull_Mode; SOLENOLDP_PIN = 0;
+  P15_PushPull_Mode; SOUND_PIN = 0;
+  // P06_PushPull_Mode; OLENOOL_PIN = 0; 
+  // P07_PushPull_Mode; CHANNEL1_PIN = 0;
 
   #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  // Uart1Init(115200);
+  Uart0Init(9600);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
   // delay_init();
   // PWM_Init(0x7CF, 0);
   AD1Init();
-  // TM1650_Init(0, 1);
+  TM1650_Init(0, 0);
 
-  //check voltage
-  advalue = 0;
-  for (averageCnt = 0; averageCnt < 8; averageCnt++)
-  {
-    set_ADCS; //start adc convert
-    while (ADCF == 0);           //check EOC flag
-    clr_ADCF; //clear EOC flag
-    adtemp = 0;
-    adtemp = ADCRH;
-    adtemp = (adtemp<<4)+ADCRL;
-    advalue += adtemp;
-  }
-  advalue = advalue >> 3; // x/8
-  if((advalue>=4080)||(advalue<=1000)) //ERROR
-  {
-    while (1)
-    {
-      SMG_One_Display(DIG1, 0X00);
-      delay_ms(500);
-      SMG_One_Display(DIG1, 0XFF);
-      delay_ms(500);
-    }
-  }
-
-  delay_ms(100);
-
-  KeyValue = Key_Get(); //display version
-  if((KeyValue&KEY_BIO)==KEY_BIO&&(KeyValue&KEY_TEMP)==KEY_TEMP) 
-  {
-    //2.0
-    SMG_One_Display(DIG2, DIG2_Dis[2]);
-    SMG_One_Display(DIG1, DIG1_Dis[0]);
-    delay_ms(2000);
-  }
-  
   while (1)
   {
 #ifndef DEBUG
@@ -450,152 +290,167 @@ void main(void)
         }
         case 2: //KEY GET AND DISPLAY
         {
-          DIG3_Dis_Temp = 0;
-          
-          if(FlagState.work)
-          {
-            DIG3_Dis_Temp |= DIG3_Dis[2];
-            if(advalue<=2785&&(KeyValue&KEY_CHARGE)!=KEY_CHARGE) //voltage low, about 6.8V
-            {
-              if(++VolLowCnt>=30)
-                VolLowCnt = 0;
-              if(VolLowCnt<15)
-                DIG3_Dis_Temp |= DIG3_Dis[2];   
-              else
-                DIG3_Dis_Temp &= ~DIG3_Dis[2];
-            } 
-          }
+          if (FlagState.work) //WORK
+            BIT_SET(DIG2_Dis, 0);
           else
-          {
-            DIG3_Dis_Temp &= ~DIG3_Dis[2];
+            DIG2_Dis = 0;
+          if (FlagState.heat) //HEAT
+            BIT_SET(DIG2_Dis, 3);
+          else
+            BIT_CLEAR(DIG2_Dis, 3);
+          if (FlagState.shock) //SHOCK
+            BIT_SET(DIG2_Dis, 4);
+          else
+            BIT_CLEAR(DIG2_Dis, 4);
+          BIT_CLEAR(DIG2_Dis, 5); //MODE
+          BIT_CLEAR(DIG2_Dis, 2);
+          BIT_CLEAR(DIG2_Dis, 1);
+          if (mode == 3)
+            BIT_SET(DIG2_Dis, 5);
+          else if (mode == 2)
+            BIT_SET(DIG2_Dis, 2);
+          else if (mode == 1)
+            BIT_SET(DIG2_Dis, 1);
 
-            if((KeyValue&KEY_CHARGE)==KEY_CHARGE)
-            {
-              if(++ChaLowCnt>=100)
-                ChaLowCnt = 0;
-              if(ChaLowCnt<50)
-                DIG3_Dis_Temp |= DIG3_Dis[1];
-              else
-                DIG3_Dis_Temp &= ~DIG3_Dis[1];
-            }
-            else
-            {
-              DIG3_Dis_Temp |= DIG3_Dis[1];
-            }
-          }
-          
-          SMG_One_Display(DIG3, DIG3_Dis_Temp);
-          SMG_One_Display(DIG2, DIG2_Dis[BIOIntensity]);
-          SMG_One_Display(DIG1, DIG1_Dis[TempIntensity]);
+          SMG_One_Display(DIG3, DIG2_Dis);
+          SMG_One_Display(DIG1, DIG_Dis[(TempIntensity+29)%10]);
+          SMG_One_Display(DIG2, DIG_Dis[(TempIntensity+29)/10]);
           KeyValue = Key_Get();
           TaskNumber++;
           break;
         }
         case 3: //key process
-        {       
-          if((KeyValue&KEY_START)!=KEY_START&&(KeyValue&KEY_BIO)!=KEY_BIO&&(KeyValue&KEY_TEMP)!=KEY_TEMP)
+        {
+          if (KeyValue != KEY_TEMP_DOWN && KeyValue != KEY_TEMP_UP && 
+              KeyValue != KEY_POWER && KeyValue != KEY_HEAT && 
+              KeyValue != KEY_SYRENGTH && KeyValue != KEY_VIBRATON)
           {
             KeyUp = 1;
-          }   
-          if(((KeyValue&KEY_POWER_KEEP)==KEY_POWER_KEEP))
-          {
-            KEEP_PIN = 0; //close keep voltage, after releasing key, it will close
-            Set_All_GPIO_Only_Input_Mode;
           }
-          
-          if(((KeyValue&KEY_START)==KEY_START)&&KeyUp)
+          if ((KeyValue == KEY_TEMP_DOWN) && KeyUp)
           {
             KeyUp = 0;
-            if(FlagState.work)
+            INLINE_MUSIC_BUTTON();
+            if (TempIntensity > 1)
             {
-              TempIntensity = 0;
-              BIOIntensity = 0;
-              FlagState.work = 0;
+              TempIntensity--;
             }
-            else
-            {
-              FlagState.work = 1; 
-            } 
           }
-          else if(((KeyValue&KEY_BIO)==KEY_BIO)&&KeyUp)
-          {           
-            KeyUp = 0;
-            if(BIOIntensity==8)
-            {
-              BIOIntensity = 0;
-            }
-            else
-            {
-              BIOIntensity++;
-            }     
-          }
-          else if(((KeyValue&KEY_TEMP)==KEY_TEMP)&&KeyUp)
+          else if ((KeyValue == KEY_TEMP_UP) && KeyUp)
           {
             KeyUp = 0;
-            if(TempIntensity==8)
-            {
-              TempIntensity = 0;
-            }
-            else
+            INLINE_MUSIC_BUTTON();
+            if (TempIntensity < 26)
             {
               TempIntensity++;
-            }   
-          }     
-          TaskNumber++;    
+            }
+          }
+          else if ((KeyValue == KEY_POWER) && KeyUp)
+          {
+            KeyUp = 0;
+            INLINE_MUSIC_BUTTON();
+            if (FlagState.work)
+            {
+              FlagState.work = 0;
+              TM1650_Light(0);
+            }
+            else
+            {
+              FlagState.work = 1;
+              TM1650_Light(8);
+            }
+          }
+          else if ((KeyValue == KEY_HEAT) && KeyUp)
+          {
+            KeyUp = 0;
+            INLINE_MUSIC_BUTTON();
+            if (FlagState.heat)
+            {
+              FlagState.heat = 0;
+            }
+            else
+            {
+              FlagState.heat = 1;
+            }
+          }
+          else if ((KeyValue == KEY_VIBRATON) && KeyUp)
+          {
+            KeyUp = 0;
+            INLINE_MUSIC_BUTTON();
+            if (mode)
+            {
+              if (FlagState.shock)
+              {
+                FlagState.shock = 0;
+              }
+              else
+              {
+                FlagState.shock = 1;
+              }
+            }
+          }
+          else if ((KeyValue == KEY_SYRENGTH) && KeyUp)
+          {
+            KeyUp = 0;
+            INLINE_MUSIC_BUTTON();
+            if (++mode > 3)
+            {
+              mode = 0;
+              FlagState.shock = 0;
+            }
+          }
+          TaskNumber++;
           break;
         }
         case 4: //work process
-        {
-          if (++s1 >= 100) //1s
-          {
-            s1 = 0;
-            advalue = 0;
-            for (averageCnt = 0; averageCnt < 8; averageCnt++)
-            {
-              set_ADCS; //start adc convert
-              while (ADCF == 0);           //check EOC flag
-              clr_ADCF; //clear EOC flag
-              adtemp = 0;
-              adtemp = ADCRH;
-              adtemp = (adtemp<<4)+ADCRL;
-              advalue += adtemp;
-            }
-            advalue = advalue >> 3; // x/8 
-            if(advalue<=2703&&(KeyValue&KEY_CHARGE)!=KEY_CHARGE) //battery no power, about 6.6V
-            {
-              SMG_One_Display(DIG2, DIG2_Dis[8]);
-              SMG_One_Display(DIG1, DIG1_Dis[8]);
-              delay_ms(500);
-              SMG_One_Display(DIG2, DIG2_Dis[0]);
-              SMG_One_Display(DIG1, DIG1_Dis[0]);
-              delay_ms(500);
-              #ifndef DEBUG
-                IWDG_Feed;  //Clear IWDG cnt
-              #endif
-              SMG_One_Display(DIG2, DIG2_Dis[8]);
-              SMG_One_Display(DIG1, DIG1_Dis[8]);
-              delay_ms(500);
-              SMG_One_Display(DIG2, DIG2_Dis[0]);
-              SMG_One_Display(DIG1, DIG1_Dis[0]);
-              delay_ms(500);
-              KEEP_PIN = 0; //close keep voltage, after releasing key, it will close
-              Set_All_GPIO_Only_Input_Mode;
-            }
-          }
-
+        { 
           if(FlagState.work)
           {
-            LED_CON = 1; 
+            if (mode)
+            {
+              PUMPR_PIN = 1;
+              PUMPL_PIN = 1;
+              if (FlagState.shock)
+                MOTOR1_PIN = 1;
+              else
+                MOTOR1_PIN = 0;
+              PressureProcess();
+              // WorkTimeDeal();
+            }
+            if(FlagState.heat)
+            {
+              LAMP2_PIN = 1;
+              LAMP1_PIN = 1;
+              // TemperatureProcess1();
+              // TemperatureProcess2();
+            }
           }
           else
           {
-            LED_CON = 0;
+            mode = 0;
+            FlagState.shock = 0;
+            FlagState.heat = 0;
+            LAMP2_PIN = 0;
+            MOTOR1_PIN = 0;
+            PUMPL_PIN = 0;
+            PUMPR_PIN = 0;
+            LAMP1_PIN = 0;
+            SOLENOLDS_PIN = 0;
+            SOLENOLDP_PIN = 0;
           }     
           TaskNumber++;
           break;
         }
-        case 5: //error process
+        case 5: //AD sample
         {
+          if(FlagState.work)
+          {
+            Pressure = AD1Sample(0);
+            Temperature1 = AD1Sample(1);
+            Temperature2 = AD1Sample(4);
+            // SendData_UART0(AD1Sample(mode)>>8);
+            // SendData_UART0((u8)AD1Sample(mode));
+          }
           TaskNumber = 1;
           break;
         }

@@ -23,44 +23,30 @@ Date: 2019.10.15
 
 void Uart0Init(u32 u32Baudrate);
 volatile void Delay(uint16_t nCount);
+u8 ReceiveData_UART0(void);
+void SendData_UART0(u8 c);
 void UART0SendBuf(u8 *SendBufAddr, u8 SendLen);
 void IWDG_Configuration(void);
 #define IWDG_Feed set_WDCLR
 void Tim2_Time_Upmode_conf(uint16_t TIM2_Period);
 void PWM_Init(uint16_t Period, uint16_t pules);
 void AD1Init(void);
+u16 AD1Sample(u8 channel);
+
+extern u8 BeeMod, BeeTime;
+void BeeFunction(void);
 
 //App define
-#define HEAT_PIN P30
-#define LED_CON P02
-#define CHANNEL1_PIN P06
-#define CHANNEL2_PIN P07
-#define CHANNEL3_PIN P16
-#define BIOS_PIN P03
-#define BIOA_PIN P04
-#define POWER_PIN P20
-#define KEEP_PIN P17
-
-#define A_OUT_PIN P01
-#define B_OUT_PIN P00
-#define C_OUT_PIN P10
-#define D_OUT_PIN P11
-#define E_OUT_PIN P12
-#define F_OUT_PIN P13
-#define G_OUT_PIN P14
-#define H_OUT_PIN P15
-
-#define A_IN_PIN P01
-#define B_IN_PIN P00
-#define C_IN_PIN P10
-#define D_IN_PIN P11
-#define E_IN_PIN P12
-#define F_IN_PIN P13
-#define G_IN_PIN P14
-#define H_IN_PIN P15
-
-#define LED_CLOSE 1
-#define LED_OPEN 0
+#define OLENOOL_PIN P06
+#define SOLENOLDP_PIN P12
+#define SOLENOLDS_PIN P11
+#define LAMP1_PIN P10
+#define LAMP2_PIN P00
+#define MOTOR1_PIN P01
+#define PUMPL_PIN P03
+#define PUMPR_PIN P04
+#define CHANNEL1_PIN P07
+#define SOUND_PIN P15
 
 #define REC_SEND_485 GPIOD_OUT->ODR3
 #define REC_485 0
@@ -72,9 +58,9 @@ typedef struct
  unsigned char ms1        : 1;
  unsigned char ms2        : 1;
  unsigned char u100       : 1;
- unsigned char ms4        : 1;
- unsigned char ms5        : 1;
- unsigned char ms6        : 1;
+ unsigned char heat       : 1;
+ unsigned char shock      : 1;
+ unsigned char s1        : 1;
  unsigned char error      : 1;
  unsigned char work       : 1;
 }_StateBit;
@@ -83,6 +69,12 @@ extern _StateBit FlagState;
 extern u8 SendBufLen;
 extern u8 *SendBuffer;
 extern u8 UART1BusyFlag;
+
+#define INLINE_MUSIC_CANNEL()	{BeeTime = 0;}
+#define INLINE_MUSIC_BUTTON() {BeeMod = 0; BeeTime = 1;}
+#define INLINE_MUSIC_START() {BeeMod = 1; BeeTime = 1;}
+#define INLINE_MUSIC_STOP() {BeeMod = 2; BeeTime = 3;}
+#define INLINE_MUSIC_ERROR() {BeeMod = 0; BeeTime = 7;}
 
 // extern u8 EEPROMLocal;
 // extern u32 EECountTemp;
@@ -97,24 +89,19 @@ extern u8 UART1BusyFlag;
 #define DIG3 (u8)0X6C
 #define DIG4 (u8)0X6E
 
-#define SMG_One_Display(ch, i) MCU_DK_Display(ch, i);
+#define SMG_One_Display(ch, i) TM1650_Display(ch, i);
 
 //Key get
-#define KEY_TEMP 0X01
-#define KEY_START 0X02
-#define KEY_BIO 0X04
-#define KEY_CHARGE 0X08
-#define KEY_POWER_KEEP 0X10
+#define KEY_TEMP_DOWN 0X47
+#define KEY_TEMP_UP 0X4F
+#define KEY_POWER 0X67
+#define KEY_HEAT 0X57
+#define KEY_SYRENGTH 0X5F
+#define KEY_VIBRATON 0X6F
 
-#define Key_Get() MCU_DK_Key();
+#define Key_Get() TM1650_Key();
 
 extern u8 TempIntensity, BIOIntensity;
-void BIO1PWM(u8 i, u8 Work);
-void BIO1Power(u8 i, u8 Work);
-void HeatPWM(u8 i, u8 Work);
-void MCU_DK_Display(u8 ch,u8 dat);
-u8 MCU_DK_Key(void);
-void MCU_DK_SetLight(u8 i);
-void MCU_DK_DisAndKey_Handle(void);
+//void HeatPWM(u8 i, u8 Work);
 
 #endif

@@ -6,7 +6,7 @@
 ************************************************************************************************************/
 void Timer2_ISR(void) interrupt 5
 {
-    static u16 Flag2msCnt = 0, Flag1msCnt;
+    static u16 Flag2msCnt = 0, Flag1msCnt = 0, Flag1sCnt = 0;
 
     clr_TF2; //Clear Timer2 Interrupt Flag
     FlagState.u100 = 1;
@@ -14,16 +14,20 @@ void Timer2_ISR(void) interrupt 5
     {
         Flag1msCnt = 0;
         FlagState.ms1 = 1;
-        HeatPWM(TempIntensity, FlagState.work);
+        BeeFunction();
+        //HeatPWM(TempIntensity, FlagState.work);
     }
     if (++Flag2msCnt >= 20)
     {
         Flag2msCnt = 0;
         FlagState.ms2 = 1;
+        if (++Flag1sCnt >= 500)
+        {
+            FlagState.s1 = 1;
+            SOLENOLDS_PIN = ~SOLENOLDS_PIN;
+            SOLENOLDP_PIN = ~SOLENOLDP_PIN;
+        }
     }
-    BIO1PWM(1, FlagState.work);
-    BIO1Power(BIOIntensity, FlagState.work);
-    MCU_DK_DisAndKey_Handle();
 }
 
 /**

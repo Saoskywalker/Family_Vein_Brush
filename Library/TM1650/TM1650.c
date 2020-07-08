@@ -101,10 +101,12 @@ static void IIC_WrByte_TM1650(uint8_t txd)
 //--------------------------------------------------------------
 void IIC_Init_TM1650(void)
 {
-   SET_SCL_OUT_TM1650();
-   SET_SDA_OUT_TM1650(); 
-   SCL_TM1650  = 1;
-   SDA_TM1650  = 1;
+	P13_Quasi_Mode; // Quasi-Bidirectional MODE
+	P14_Quasi_Mode;
+	SET_SCL_OUT_TM1650();
+	SET_SDA_OUT_TM1650();
+	SCL_TM1650 = 1;
+	SDA_TM1650 = 1;
 }
 
 u8 TM1650_Key(void)	  //按键扫描
@@ -142,6 +144,15 @@ void TM1650_Display(u8 add,u8 dat) //数码管显示
 	IIC_WrByte_TM1650(dat);
 	IIC_Wait_Ack_TM1650();
 	I2C_Stop_TM1650();
+}
+
+//light: 0~8
+void TM1650_Light(u8 light)
+{
+	if(light==0)
+		TM1650_Display(0x48, 0); //close display
+	else if(light<=8)
+		TM1650_Display(0x48, light<<4|1); //adjust light
 }
 
 //light: light level: value:0=8 value:1~7=1~7; dis: dis 1 or close 0
