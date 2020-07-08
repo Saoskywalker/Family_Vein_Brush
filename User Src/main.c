@@ -155,8 +155,12 @@ const u16 HeatIntensityTable[] = {0, 1, 2, 3, 4,
 } */
 
 //Temperature Process
-const u16 TemperatureTable[] = {0, 1396, 1296, 1196, 1096,
-								996, 796, 596, 498};
+const u16 TemperatureTable[] = {0, 1505, 1490, 1480, 1470, 1460,
+                                1450, 1440, 1430, 1420, 1410,
+                                1400, 1390, 1380, 1370, 1360,
+                                1350, 1340, 1330, 1320, 1310, 
+                                1296, 1196, 1096, 996, 796, 
+                                596};
 u16 Temperature1 = 0;
 static u8 Ntc1ErrorFlag = 0;
 void TemperatureProcess1(void)
@@ -232,7 +236,26 @@ void TemperatureProcess2(void)
 u16 Pressure = 0;
 void PressureProcess(void)
 {
-
+  static u16 cnt = 0;
+  if (Pressure >= 1813)
+  {
+    PUMPL_PIN = 0;
+    PUMPR_PIN = 0;
+    SOLENOLDS_PIN = 1;
+    SOLENOLDP_PIN = 1;
+    cnt = 0;
+  }
+  else if(Pressure<=592)
+  {
+    if(++cnt>=300)
+    {
+      cnt = 300;
+    PUMPL_PIN = 1;
+    PUMPR_PIN = 1;            
+    SOLENOLDS_PIN = 0;
+    SOLENOLDP_PIN = 0;
+    }
+  }
 }
 
 void main(void)
@@ -408,8 +431,6 @@ void main(void)
           {
             if (mode)
             {
-              PUMPR_PIN = 1;
-              PUMPL_PIN = 1;
               if (FlagState.shock)
                 MOTOR1_PIN = 1;
               else
@@ -419,10 +440,8 @@ void main(void)
             }
             if(FlagState.heat)
             {
-              LAMP2_PIN = 1;
-              LAMP1_PIN = 1;
-              // TemperatureProcess1();
-              // TemperatureProcess2();
+              TemperatureProcess1();
+              TemperatureProcess2();
             }
           }
           else
@@ -445,11 +464,19 @@ void main(void)
         {
           if(FlagState.work)
           {
+            if (FlagState.s1)
+            {
+              FlagState.s1 = 0;
             Pressure = AD1Sample(0);
             Temperature1 = AD1Sample(1);
             Temperature2 = AD1Sample(4);
-            // SendData_UART0(AD1Sample(mode)>>8);
-            // SendData_UART0((u8)AD1Sample(mode));
+            SendData_UART0(Pressure>>8);
+            SendData_UART0((u8)Pressure);
+            SendData_UART0(Temperature1>>8);
+            SendData_UART0((u8)Temperature1);
+            SendData_UART0(Temperature2>>8);
+            SendData_UART0((u8)Temperature2);
+            }
           }
           TaskNumber = 1;
           break;

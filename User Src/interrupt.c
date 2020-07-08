@@ -24,8 +24,7 @@ void Timer2_ISR(void) interrupt 5
         if (++Flag1sCnt >= 500)
         {
             FlagState.s1 = 1;
-            SOLENOLDS_PIN = ~SOLENOLDS_PIN;
-            SOLENOLDP_PIN = ~SOLENOLDP_PIN;
+            Flag1sCnt = 0;
         }
     }
 }
