@@ -170,9 +170,9 @@ void TemperatureProcess1(void)
 	//NTC ERROR
 	if(Temperature1>=4000||Temperature1<=100)
 	{
-		if(++i>=10000)
+		if(++i>=800)
 		{
-			i = 10000;
+			i = 800;
 			if(Ntc1ErrorFlag==0)
 			{
 				Ntc1ErrorFlag = 1;
@@ -206,9 +206,9 @@ void TemperatureProcess2(void)
 	//NTC ERROR
 	if(Temperature2>=4000||Temperature2<=100)
 	{
-		if(++i>=10000)
+		if(++i>=800)
 		{
-			i = 10000;
+			i = 800;
 			if(Ntc2ErrorFlag==0)
 			{
 				Ntc2ErrorFlag = 1;
@@ -234,26 +234,55 @@ void TemperatureProcess2(void)
 }
 
 u16 Pressure = 0;
+static u8 PressureErrorFlag = 0;
 void PressureProcess(void)
 {
   static u16 cnt = 0;
-  if (Pressure >= 1813)
+  static u16 i = 0;
+
+  if (Pressure >= 4000 || Pressure <= 100)
   {
-    PUMPL_PIN = 0;
-    PUMPR_PIN = 0;
-    SOLENOLDS_PIN = 1;
-    SOLENOLDP_PIN = 1;
-    cnt = 0;
-  }
-  else if(Pressure<=592)
-  {
-    if(++cnt>=300)
+    if (++i >= 800)
     {
-      cnt = 300;
-    PUMPL_PIN = 1;
-    PUMPR_PIN = 1;            
-    SOLENOLDS_PIN = 0;
-    SOLENOLDP_PIN = 0;
+      i = 800;
+      if (PressureErrorFlag == 0)
+      {
+        PressureErrorFlag = 1;
+        INLINE_MUSIC_ERROR();
+        PUMPL_PIN = 0;
+        PUMPR_PIN = 0;
+        SOLENOLDS_PIN = 0;
+        SOLENOLDP_PIN = 0;
+      }
+    }
+  }
+  else
+  {
+    if (i >= 25)
+      i -= 25;
+    else
+      i = 0;
+    if (i == 0)
+      PressureErrorFlag = 0;
+
+    if (Pressure >= 1813)
+    {
+      PUMPL_PIN = 0;
+      PUMPR_PIN = 0;
+      SOLENOLDS_PIN = 0;
+      SOLENOLDP_PIN = 0;
+      cnt = 0;
+    }
+    else if (Pressure <= 592)
+    {
+      if (++cnt >= 300)
+      {
+        cnt = 300;
+        PUMPL_PIN = 1;
+        PUMPR_PIN = 1;
+        SOLENOLDS_PIN = 1;
+        SOLENOLDP_PIN = 1;
+      }
     }
   }
 }
@@ -437,6 +466,14 @@ void main(void)
                 MOTOR1_PIN = 0;
               PressureProcess();
               // WorkTimeDeal();
+            }
+            else
+            {
+              PUMPL_PIN = 0;
+              PUMPR_PIN = 0;
+              SOLENOLDS_PIN = 0;
+              SOLENOLDP_PIN = 0;
+              MOTOR1_PIN = 0;
             }
             if(FlagState.heat)
             {
