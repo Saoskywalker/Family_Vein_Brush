@@ -16,7 +16,7 @@ TM1650Ð¾Æ¬¿ØÖÆ
 #define SET_SDA_OUT_TM1650()    //{GPIOB->DDR|=GPIO_PIN_5;GPIOB->CR2&=~GPIO_PIN_5;GPIOB->CR1&=~GPIO_PIN_5;}
 #define SET_SDA_IN_TM1650()     //{GPIOB->DDR&=~GPIO_PIN_5;GPIOB->CR2&=~GPIO_PIN_5;GPIOB->CR1&=~GPIO_PIN_5;}
 
-#define TM1650_IIC_Delay_us(z) delay_us((u8)z);  
+#define TM1650_IIC_Delay_us(z) Delay((u8)z);  
 
 //void IIC_Init_TM1650(void);
 /*******************************************/ 

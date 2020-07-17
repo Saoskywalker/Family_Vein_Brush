@@ -308,14 +308,14 @@ void main(void)
   P11_PushPull_Mode; SOLENOLDS_PIN = 0;
   P12_PushPull_Mode; SOLENOLDP_PIN = 0;
   P15_PushPull_Mode; SOUND_PIN = 0;
-  // P06_PushPull_Mode; OLENOOL_PIN = 0; 
-  // P07_PushPull_Mode; CHANNEL1_PIN = 0;
+  P06_PushPull_Mode; OLENOOL_PIN = 0; 
+  P07_PushPull_Mode; CHANNEL1_PIN = 0;
 
   #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  Uart0Init(9600);
+  Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
@@ -327,7 +327,7 @@ void main(void)
   while (1)
   {
 #ifndef DEBUG
-    IWDG_Feed;  //Clear IWDG cnt
+    IWDG_Feed; //Clear IWDG cnt
 #endif
 
     if (FlagState.ms2)
@@ -504,15 +504,15 @@ void main(void)
             if (FlagState.s1)
             {
               FlagState.s1 = 0;
-            Pressure = AD1Sample(0);
-            Temperature1 = AD1Sample(1);
-            Temperature2 = AD1Sample(4);
-            SendData_UART0(Pressure>>8);
-            SendData_UART0((u8)Pressure);
-            SendData_UART0(Temperature1>>8);
-            SendData_UART0((u8)Temperature1);
-            SendData_UART0(Temperature2>>8);
-            SendData_UART0((u8)Temperature2);
+              Pressure = AD1Sample(0);
+              Temperature1 = AD1Sample(1);
+              Temperature2 = AD1Sample(4);
+              SendData_UART1(Pressure>>8);
+              SendData_UART1((u8)Pressure);
+              SendData_UART1(Temperature1>>8);
+              SendData_UART1((u8)Temperature1);
+              SendData_UART1(Temperature2>>8);
+              SendData_UART1((u8)Temperature2);
             }
           }
           TaskNumber = 1;

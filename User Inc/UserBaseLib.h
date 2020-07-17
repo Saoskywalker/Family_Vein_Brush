@@ -22,9 +22,12 @@ Date: 2019.10.15
 #define BIT7_1 0x80
 
 void Uart0Init(u32 u32Baudrate);
+void Uart1Init(u32 u32Baudrate);
 volatile void Delay(uint16_t nCount);
 u8 ReceiveData_UART0(void);
 void SendData_UART0(u8 c);
+u8 ReceiveData_UART1(void);
+void SendData_UART1 (u8 c);
 void UART0SendBuf(u8 *SendBufAddr, u8 SendLen);
 void IWDG_Configuration(void);
 #define IWDG_Feed set_WDCLR

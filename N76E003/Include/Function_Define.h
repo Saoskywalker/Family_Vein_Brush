@@ -527,4 +527,10 @@ All function define inital setting file for Nuvoton N76E003
 #define		Enable_SPI_Interrupt		set_ESPI;set_EA
 #define		SS		P15
 
+/*******************************************************************************
+ * select SFR page 
+ * *****************************************************************************/
+#define SFR_PAGE_1 BIT_TMP=EA;EA=0;TA=0xAA;TA=0x55;SFRS|=0x01
+#define SFR_PAGE_0 TA=0xAA;TA=0x55;SFRS&=0xFE;EA=BIT_TMP
+
 #endif

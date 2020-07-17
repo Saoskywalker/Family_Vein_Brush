@@ -29,6 +29,22 @@ void Timer0_Delay100us(UINT32 u32CNT)
     }
     clr_TR0;                       			        //Stop Timer0
 }
+//-------------------------------------------------------------------------
+void Timer0_Delay1us(UINT32 u32CNT)
+{
+    set_T0M;                                		//T0M=1, Timer0 Clock = Fsys
+    TMOD |= 0x01;                         		  //Timer0 is 16-bit mode
+    set_TR0;                            		    //Start Timer0
+    while (u32CNT != 0)
+    {
+        TL0 = LOBYTE(65536-4);	//Find  define in "Function_define.h" "TIMER VALUE"
+        TH0 = HIBYTE(65536-4);
+        while (TF0 != 1);       		            //Check Timer0 Time-Out Flag
+        clr_TF0;
+        u32CNT --;
+    }
+    clr_TR0;                       			        //Stop Timer0
+}
 //------------------------------------------------------------------------------
 void Timer0_Delay1ms(UINT32 u32CNT)
 {
