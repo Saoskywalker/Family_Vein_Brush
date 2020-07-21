@@ -12,7 +12,6 @@ History:
 *****************************************************************************/ 
 
 /* Includes ------------------------------------------------------------------*/
-// #define DEBUG
 #include "UserBaseLib.h"
 #include "delay.h"
 #include "TM1650.h"
@@ -22,6 +21,10 @@ History:
 /* Private defines -----------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
+
+//0 1 2 3 4 5 6 7 8 9 - E . NC
+const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0X99, 0X02, 0X00}; 
+u8 DIG2_Dis = 0; 
 
 /* //BIO1 PWM
 u8 BIOIntensity = 0;
@@ -85,45 +88,66 @@ void BeeFunction(void)
 {
 	static u16 BeeTimeCnt = 0;
 
-	if (BeeTime > 0)
-	{
-		if (++BeeTimeCnt >= BeeModPeriod[BeeMod])
-		{
-			BeeTimeCnt = 0;
-			BeeTime--;
-		}
-		else
-		{
-			if (BeeTimeCnt >= BeeModCompare[BeeMod])
-				SOUND_PIN = 0;
-			else
-				SOUND_PIN = 1;
-		}
-	}
-	else
-	{
-		BeeTimeCnt = 0;
-		SOUND_PIN = 0;
-	}
+  if (FlagState.work)
+  {
+    if (BeeTime > 0)
+    {
+      if (++BeeTimeCnt >= BeeModPeriod[BeeMod])
+      {
+        BeeTimeCnt = 0;
+        BeeTime--;
+      }
+      else
+      {
+        if (BeeTimeCnt >= BeeModCompare[BeeMod])
+          SOUND_PIN = 0;
+        else
+          SOUND_PIN = 1;
+      }
+    }
+    else
+    {
+      BeeTimeCnt = 0;
+      SOUND_PIN = 0;
+    }
+  }
+  else
+  {
+    BeeTimeCnt = 0;
+    SOUND_PIN = 0;
+    BeeMod = 0;
+    BeeTime = 0;
+  }
 }
 
-u16 WorkTime = 0;
+u16 WorkTime = 900, WorkTimeDis = 0;
+u8 secondFlag = 13;
 void WorkTimeDeal(void)
 {
-	if (FlagState.s1)
-	{
-			FlagState.s1 = 0;
-			if (WorkTime > 0)
-			{
-				WorkTime--;
-			}
-			else
-			{
-				INLINE_MUSIC_STOP();
-				WorkTime = 900;
-				FlagState.work = 0;
-			}
-	}
+  if (FlagState.s1)
+  {
+    FlagState.s1 = 0;
+    if (WorkTime > 0)
+    {
+      WorkTime--;
+    }
+    else
+    {
+      INLINE_MUSIC_STOP();
+      WorkTime = 900;
+      FlagState.work = 0;
+      DIG2_Dis = 0;
+      SMG_One_Display(DIG3, DIG2_Dis);
+      TM1650_Light(0);
+    } 
+    if(secondFlag==13)
+      secondFlag = 12;
+    else
+      secondFlag = 13;
+    WorkTimeDis = ((WorkTime+59)/60/10<<8)+((WorkTime+59)/60%10);
+    SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
+    SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+  }
 }
 
 //Heat
@@ -287,15 +311,26 @@ void PressureProcess(void)
   }
 }
 
+void PressureWork(void)
+{
+
+}
+
+void DisTemp(void)
+{
+  SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]);
+  SMG_One_Display(DIG2, DIG_Dis[(TempIntensity + 29) / 10]);
+}
+
 void main(void)
 { 
   u8 DIG3_Dis_Temp = 0;
-  u8 DIG2_Dis; 
-  const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0X02}; 
   u8 TaskNumber = 1, KeyValue = 0;
   u8 KeyUp = 0, KeyT = 0;
   u8 mode = 0;
-  
+  u8 cnt1s = 0;
+  u16 KeyCnt = 0;
+
   //io init 
   //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
   clr_P2S_0; //POWER KEY, HIZ mode
@@ -324,6 +359,8 @@ void main(void)
   AD1Init();
   TM1650_Init(0, 0);
 
+  FlagState.work = 0;
+
   while (1)
   {
 #ifndef DEBUG
@@ -335,39 +372,14 @@ void main(void)
       FlagState.ms2 = 0;
       switch (TaskNumber)
       {
-        case 1: //UART T&R process
+        case 1: //KEY GET AND DISPLAY
         {
+          KeyValue = Key_Get();
           TaskNumber++;
           break;
         }
-        case 2: //KEY GET AND DISPLAY
+        case 2: //UART T&R process
         {
-          if (FlagState.work) //WORK
-            BIT_SET(DIG2_Dis, 0);
-          else
-            DIG2_Dis = 0;
-          if (FlagState.heat) //HEAT
-            BIT_SET(DIG2_Dis, 3);
-          else
-            BIT_CLEAR(DIG2_Dis, 3);
-          if (FlagState.shock) //SHOCK
-            BIT_SET(DIG2_Dis, 4);
-          else
-            BIT_CLEAR(DIG2_Dis, 4);
-          BIT_CLEAR(DIG2_Dis, 5); //MODE
-          BIT_CLEAR(DIG2_Dis, 2);
-          BIT_CLEAR(DIG2_Dis, 1);
-          if (mode == 3)
-            BIT_SET(DIG2_Dis, 5);
-          else if (mode == 2)
-            BIT_SET(DIG2_Dis, 2);
-          else if (mode == 1)
-            BIT_SET(DIG2_Dis, 1);
-
-          SMG_One_Display(DIG3, DIG2_Dis);
-          SMG_One_Display(DIG1, DIG_Dis[(TempIntensity+29)%10]);
-          SMG_One_Display(DIG2, DIG_Dis[(TempIntensity+29)/10]);
-          KeyValue = Key_Get();
           TaskNumber++;
           break;
         }
@@ -379,82 +391,154 @@ void main(void)
           {
             KeyUp = 1;
           }
-          if ((KeyValue == KEY_TEMP_DOWN) && KeyUp)
+          if ((KeyValue == KEY_POWER) && KeyUp)
           {
             KeyUp = 0;
-            INLINE_MUSIC_BUTTON();
-            if (TempIntensity > 1)
-            {
-              TempIntensity--;
-            }
-          }
-          else if ((KeyValue == KEY_TEMP_UP) && KeyUp)
-          {
-            KeyUp = 0;
-            INLINE_MUSIC_BUTTON();
-            if (TempIntensity < 26)
-            {
-              TempIntensity++;
-            }
-          }
-          else if ((KeyValue == KEY_POWER) && KeyUp)
-          {
-            KeyUp = 0;
-            INLINE_MUSIC_BUTTON();
             if (FlagState.work)
             {
               FlagState.work = 0;
+              DIG2_Dis = 0;
               TM1650_Light(0);
             }
             else
             {
               FlagState.work = 1;
+              BIT_SET(DIG2_Dis, 0);
+              DisTemp();
               TM1650_Light(8);
             }
-          }
-          else if ((KeyValue == KEY_HEAT) && KeyUp)
-          {
-            KeyUp = 0;
+            SMG_One_Display(DIG3, DIG2_Dis);
             INLINE_MUSIC_BUTTON();
-            if (FlagState.heat)
+          }
+          if (FlagState.work)
+          {
+            if (KeyValue == KEY_TEMP_DOWN)
             {
-              FlagState.heat = 0;
+              if(++KeyCnt>=100)
+              {
+                KeyCnt = 70;
+                if (TempIntensity > 1)
+                  TempIntensity--;
+                DisTemp();
+              }
+            }
+            else if (KeyValue == KEY_TEMP_UP)
+            {
+              if (++KeyCnt >= 100)
+              {
+                KeyCnt = 70;
+                if (TempIntensity < 26)
+                  TempIntensity++;
+                DisTemp();
+              }
             }
             else
             {
-              FlagState.heat = 1;
+              KeyCnt = 0;
             }
-          }
-          else if ((KeyValue == KEY_VIBRATON) && KeyUp)
-          {
-            KeyUp = 0;
-            INLINE_MUSIC_BUTTON();
-            if (mode)
+            if ((KeyValue == KEY_TEMP_DOWN) && KeyUp)
             {
-              if (FlagState.shock)
+              KeyUp = 0;
+              INLINE_MUSIC_BUTTON();
+              if (TempIntensity > 1)
               {
-                FlagState.shock = 0;
+                TempIntensity--;
+              }
+              DisTemp();
+            }
+            else if ((KeyValue == KEY_TEMP_UP) && KeyUp)
+            {
+              KeyUp = 0;
+              INLINE_MUSIC_BUTTON();
+              if (TempIntensity < 26)
+              {
+                TempIntensity++;
+              }
+              DisTemp();
+            }
+            else if ((KeyValue == KEY_HEAT) && KeyUp)
+            {
+              KeyUp = 0;
+              INLINE_MUSIC_BUTTON();  
+              if (FlagState.heat)
+              {
+                FlagState.heat = 0;
+                BIT_CLEAR(DIG2_Dis, 3);
               }
               else
               {
-                FlagState.shock = 1;
+                FlagState.heat = 1;
+                BIT_SET(DIG2_Dis, 3);
+              }
+              SMG_One_Display(DIG3, DIG2_Dis);
+            }
+            else if ((KeyValue == KEY_VIBRATON) && KeyUp)
+            {
+              KeyUp = 0;
+              INLINE_MUSIC_BUTTON();
+              if (mode)
+              {
+                if (FlagState.shock)
+                {
+                  FlagState.shock = 0;
+                  BIT_CLEAR(DIG2_Dis, 4);
+                }
+                else
+                {
+                  FlagState.shock = 1;
+                  BIT_SET(DIG2_Dis, 4);
+                }
+                SMG_One_Display(DIG3, DIG2_Dis);
               }
             }
-          }
-          else if ((KeyValue == KEY_SYRENGTH) && KeyUp)
-          {
-            KeyUp = 0;
-            INLINE_MUSIC_BUTTON();
-            if (++mode > 3)
+            else if ((KeyValue == KEY_SYRENGTH) && KeyUp)
             {
-              mode = 0;
-              FlagState.shock = 0;
+              KeyUp = 0;
+              INLINE_MUSIC_BUTTON();
+              if (++mode > 3)
+              {
+                mode = 0;
+                FlagState.shock = 0;
+                BIT_CLEAR(DIG2_Dis, 4);
+                DisTemp();
+              }
+              BIT_CLEAR(DIG2_Dis, 5); //MODE
+              BIT_CLEAR(DIG2_Dis, 2);
+              BIT_CLEAR(DIG2_Dis, 1);
+              if (mode == 3)
+                BIT_SET(DIG2_Dis, 1);
+              else if (mode == 2)
+                BIT_SET(DIG2_Dis, 2);
+              else if (mode == 1)
+                BIT_SET(DIG2_Dis, 5);
+              SMG_One_Display(DIG3, DIG2_Dis);
             }
           }
           TaskNumber++;
           break;
         }
-        case 4: //work process
+        case 4: //AD sample
+        {
+          if(FlagState.work)
+          {
+            if (++cnt1s>=100)
+            {
+              cnt1s = 0;
+              Pressure = AD1Sample(0);
+              Temperature1 = AD1Sample(1);
+              Temperature2 = AD1Sample(4);
+              SendData_UART1(Pressure>>8);
+              SendData_UART1((u8)Pressure);
+              SendData_UART1(Temperature1>>8);
+              SendData_UART1((u8)Temperature1);
+              SendData_UART1(Temperature2>>8);
+              SendData_UART1((u8)Temperature2);
+            }
+          }
+          TaskNumber++;
+          break;
+        }
+        case 5: //work process
         { 
           if(FlagState.work)
           {
@@ -465,7 +549,8 @@ void main(void)
               else
                 MOTOR1_PIN = 0;
               PressureProcess();
-              // WorkTimeDeal();
+              PressureWork();
+              WorkTimeDeal();
             }
             else
             {
@@ -483,6 +568,10 @@ void main(void)
           }
           else
           {
+            DIG2_Dis = 0;
+            SMG_One_Display(DIG3, DIG2_Dis);
+            WorkTime = 900;
+            TempIntensity = 1;
             mode = 0;
             FlagState.shock = 0;
             FlagState.heat = 0;
@@ -494,27 +583,6 @@ void main(void)
             SOLENOLDS_PIN = 0;
             SOLENOLDP_PIN = 0;
           }     
-          TaskNumber++;
-          break;
-        }
-        case 5: //AD sample
-        {
-          if(FlagState.work)
-          {
-            if (FlagState.s1)
-            {
-              FlagState.s1 = 0;
-              Pressure = AD1Sample(0);
-              Temperature1 = AD1Sample(1);
-              Temperature2 = AD1Sample(4);
-              SendData_UART1(Pressure>>8);
-              SendData_UART1((u8)Pressure);
-              SendData_UART1(Temperature1>>8);
-              SendData_UART1((u8)Temperature1);
-              SendData_UART1(Temperature2>>8);
-              SendData_UART1((u8)Temperature2);
-            }
-          }
           TaskNumber = 1;
           break;
         }
