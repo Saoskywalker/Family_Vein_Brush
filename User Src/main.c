@@ -88,65 +88,69 @@ void BeeFunction(void)
 {
 	static u16 BeeTimeCnt = 0;
 
-  if (FlagState.work)
+  if (BeeTime > 0)
   {
-    if (BeeTime > 0)
+    if (++BeeTimeCnt >= BeeModPeriod[BeeMod])
     {
-      if (++BeeTimeCnt >= BeeModPeriod[BeeMod])
-      {
-        BeeTimeCnt = 0;
-        BeeTime--;
-      }
-      else
-      {
-        if (BeeTimeCnt >= BeeModCompare[BeeMod])
-          SOUND_PIN = 0;
-        else
-          SOUND_PIN = 1;
-      }
+      BeeTimeCnt = 0;
+      BeeTime--;
     }
     else
     {
-      BeeTimeCnt = 0;
-      SOUND_PIN = 0;
+      if (BeeTimeCnt >= BeeModCompare[BeeMod])
+        SOUND_PIN = 0;
+      else
+        SOUND_PIN = 1;
     }
   }
   else
   {
     BeeTimeCnt = 0;
     SOUND_PIN = 0;
-    BeeMod = 0;
-    BeeTime = 0;
   }
 }
 
-u16 WorkTime = 900, WorkTimeDis = 0;
-u8 secondFlag = 13;
+u16 WorkTime = 959;
+u8 disShift = 0;
 void WorkTimeDeal(void)
 {
+  static u16 WorkTimeDis = 0;
+  static u8 secondFlag = 13, cnt1min = 0;
+
   if (FlagState.s1)
   {
     FlagState.s1 = 0;
     if (WorkTime > 0)
     {
       WorkTime--;
+      if(++cnt1min>=60)
+      {
+        cnt1min = 0;
+        INLINE_MUSIC_BUTTON();
+      }
     }
     else
     {
       INLINE_MUSIC_STOP();
-      WorkTime = 900;
+      WorkTime = 959;
+      cnt1min = 0;
       FlagState.work = 0;
       DIG2_Dis = 0;
       SMG_One_Display(DIG3, DIG2_Dis);
       TM1650_Light(0);
-    } 
-    if(secondFlag==13)
-      secondFlag = 12;
-    else
-      secondFlag = 13;
-    WorkTimeDis = ((WorkTime+59)/60/10<<8)+((WorkTime+59)/60%10);
-    SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
-    SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+    }
+    if (++disShift >= 2)
+    {
+      disShift = 2;
+      if (secondFlag == 13)
+        secondFlag = 12;
+      else
+        secondFlag = 13;
+      // WorkTimeDis = ((WorkTime + 59) / 60 / 10 << 8) + ((WorkTime + 59) / 60 % 10);
+      WorkTimeDis = ((WorkTime) / 60 / 10 << 8) + ((WorkTime) / 60 % 10);
+      SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
+      SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+    }
   }
 }
 
@@ -316,11 +320,9 @@ void PressureWork(void)
 
 }
 
-void DisTemp(void)
-{
-  SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]);
-  SMG_One_Display(DIG2, DIG_Dis[(TempIntensity + 29) / 10]);
-}
+#define DisTemp() {SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]); \
+                  SMG_One_Display(DIG2, DIG_Dis[(TempIntensity + 29) / 10]); \
+                  disShift = 0;}
 
 void main(void)
 { 
@@ -394,8 +396,10 @@ void main(void)
           if ((KeyValue == KEY_POWER) && KeyUp)
           {
             KeyUp = 0;
+            
             if (FlagState.work)
             {
+              INLINE_MUSIC_BUTTON();
               FlagState.work = 0;
               DIG2_Dis = 0;
               TM1650_Light(0);
@@ -403,12 +407,12 @@ void main(void)
             else
             {
               FlagState.work = 1;
+              INLINE_MUSIC_BUTTON();
               BIT_SET(DIG2_Dis, 0);
               DisTemp();
               TM1650_Light(8);
             }
             SMG_One_Display(DIG3, DIG2_Dis);
-            INLINE_MUSIC_BUTTON();
           }
           if (FlagState.work)
           {
@@ -475,7 +479,6 @@ void main(void)
             else if ((KeyValue == KEY_VIBRATON) && KeyUp)
             {
               KeyUp = 0;
-              INLINE_MUSIC_BUTTON();
               if (mode)
               {
                 if (FlagState.shock)
@@ -488,6 +491,7 @@ void main(void)
                   FlagState.shock = 1;
                   BIT_SET(DIG2_Dis, 4);
                 }
+                INLINE_MUSIC_BUTTON();
                 SMG_One_Display(DIG3, DIG2_Dis);
               }
             }
@@ -570,7 +574,7 @@ void main(void)
           {
             DIG2_Dis = 0;
             SMG_One_Display(DIG3, DIG2_Dis);
-            WorkTime = 900;
+            WorkTime = 959;
             TempIntensity = 1;
             mode = 0;
             FlagState.shock = 0;

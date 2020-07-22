@@ -73,11 +73,11 @@ extern u8 SendBufLen;
 extern u8 *SendBuffer;
 extern u8 UART1BusyFlag;
 
-#define INLINE_MUSIC_CANNEL()	{BeeTime = 0;}
-#define INLINE_MUSIC_BUTTON() {BeeMod = 0; BeeTime = 1;}
-#define INLINE_MUSIC_START() {BeeMod = 1; BeeTime = 1;}
-#define INLINE_MUSIC_STOP() {BeeMod = 2; BeeTime = 3;}
-#define INLINE_MUSIC_ERROR() {BeeMod = 0; BeeTime = 7;}
+#define INLINE_MUSIC_CANNEL()	{if(FlagState.work) BeeTime = 0;}
+#define INLINE_MUSIC_BUTTON() {if(FlagState.work) {BeeMod = 0; BeeTime = 1;}}
+#define INLINE_MUSIC_START() {if(FlagState.work) {BeeMod = 1; BeeTime = 1;}}
+#define INLINE_MUSIC_STOP() {if(FlagState.work) {BeeMod = 2; BeeTime = 5;}}
+#define INLINE_MUSIC_ERROR() {if(FlagState.work) {BeeMod = 0; BeeTime = 7;}}
 
 // extern u8 EEPROMLocal;
 // extern u32 EECountTemp;
