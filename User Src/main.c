@@ -423,7 +423,10 @@ void shockRun()
     case 1:
     {
       if (++cnt >= 700)
+      {
+        cnt = 0;
         step++;
+      }
       else
         MOTOR1_PIN = 1;
       break;
@@ -432,7 +435,10 @@ void shockRun()
     {
 
       if (++cnt >= 200)
+      {
+        cnt = 0;
         step++;
+      }
       else
         MOTOR1_PIN = 0;
       break;
@@ -441,7 +447,10 @@ void shockRun()
     {
 
       if (++cnt >= 200)
+      {
+        cnt = 0;
         step++;
+      }
       else
         MOTOR1_PIN = 1;
       break;
@@ -450,7 +459,10 @@ void shockRun()
     {
 
       if (++cnt >= 200)
+      {
+        cnt = 0;
         step++;
+      }
       else
         MOTOR1_PIN = 0;
       break;
@@ -459,7 +471,10 @@ void shockRun()
     {
 
       if (++cnt >= 200)
+      {
+        cnt = 0;
         step++;
+      }
       else
         MOTOR1_PIN = 1;
       break;
@@ -468,13 +483,17 @@ void shockRun()
     {
 
       if (++cnt >= 200)
+      {
+        cnt = 0;
         step = 1;
+      }
       else
         MOTOR1_PIN = 0;
       break;
     }
     default:
     {
+      cnt = 0;
       step = 1;
       break;
     }
