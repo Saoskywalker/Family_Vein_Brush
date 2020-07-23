@@ -23,7 +23,7 @@ History:
 /* Private function prototypes -----------------------------------------------*/
 
 //0 1 2 3 4 5 6 7 8 9 - E . NC
-const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0X99, 0X02, 0X00}; 
+const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0XE5, 0X02, 0X00}; 
 u8 DIG2_Dis = 0; 
 
 /* //BIO1 PWM
@@ -155,10 +155,11 @@ void WorkTimeDeal(void)
 }
 
 //Heat
+u8 TempWork1 = 0, TempWork2 = 0, TempStage1 = 0, TempStage2 = 0;
 u8 TempIntensity = 1;
-const u16 HeatIntensityTable[] = {0, 1, 2, 3, 4,
+const u16 HeatIntensityTable[] = {0, 3, 5, 8, 4,
 																	5, 6, 7, 8};
-/* void HeatPWM(u8 i, u8 Work)
+void HeatPWM(u8 i, u8 Work)
 {
 	static u16 HeatTimeCnt = 0;
 	static u8 HeatModRenew = 0;
@@ -171,16 +172,40 @@ const u16 HeatIntensityTable[] = {0, 1, 2, 3, 4,
 			HeatModRenew = i;
 		}
 		if((HeatTimeCnt<HeatIntensityTable[HeatModRenew]))
-			HEAT_PIN = 1;	//ON
+			LAMP1_PIN = 1;	//ON
 		else
-			HEAT_PIN = 0;	//OFF
+			LAMP1_PIN = 0;	//OFF
 	}
 	else
 	{
 		HeatTimeCnt = 0;
-		HEAT_PIN = 0;	//ON
+		LAMP1_PIN = 0;	//OFF
 	}
-} */
+}
+
+void HeatPWM2(u8 i, u8 Work)
+{
+	static u16 HeatTimeCnt = 0;
+	static u8 HeatModRenew = 0;
+	
+	if(Work)
+	{
+		if(++HeatTimeCnt>=8)
+		{
+			HeatTimeCnt = 0;
+			HeatModRenew = i;
+		}
+		if((HeatTimeCnt<HeatIntensityTable[HeatModRenew]))
+			LAMP2_PIN = 1;	//ON
+		else
+			LAMP2_PIN = 0;	//OFF
+	}
+	else
+	{
+		HeatTimeCnt = 0;
+		LAMP2_PIN = 0;	//OFF
+	}
+}
 
 //Temperature Process
 const u16 TemperatureTable[] = {0, 1505, 1490, 1480, 1470, 1460,
@@ -205,7 +230,7 @@ void TemperatureProcess1(void)
 			{
 				Ntc1ErrorFlag = 1;
         INLINE_MUSIC_ERROR();
-				LAMP2_PIN = 0;
+				TempWork1 = 0;
 			}			
 		}
 	}
@@ -217,11 +242,11 @@ void TemperatureProcess1(void)
 			i = 0;
 		if(i==0)
 			Ntc1ErrorFlag = 0;
-
+TempStage1 = 3;
 		if(Temperature1>=TemperatureTable[TempIntensity]+16)
-			LAMP2_PIN = 1;
+			TempWork1 = 1;
 		if(Temperature1<=TemperatureTable[TempIntensity])
-			LAMP2_PIN = 0;
+			TempWork1 = 0;
 	}
 }
 
@@ -241,7 +266,7 @@ void TemperatureProcess2(void)
 			{
 				Ntc2ErrorFlag = 1;
         INLINE_MUSIC_ERROR();
-				LAMP1_PIN = 0;
+				TempWork2 = 0;
 			}			
 		}
 	}
@@ -253,71 +278,214 @@ void TemperatureProcess2(void)
 			i = 0;
 		if(i==0)
 			Ntc2ErrorFlag = 0;
-
+TempStage1 = 3;
 		if(Temperature2>=TemperatureTable[TempIntensity]+16)
-			LAMP1_PIN = 1;
+			TempWork2 = 1;
 		if(Temperature2<=TemperatureTable[TempIntensity])
-			LAMP1_PIN = 0;
+			TempWork2 = 0;
 	}
 }
 
 u16 Pressure = 0;
 static u8 PressureErrorFlag = 0;
-void PressureProcess(void)
+static const u16 PressureTable[4][2] = {{0, 0}, {0X077A, 0X0744}, {0X0785, 0X0750}, {0X078B, 0X078B}};
+void PressureProcess(u8 mode)
 {
   static u16 cnt = 0;
   static u16 i = 0;
+  static u8 step = 1;
 
-  if (Pressure >= 4000 || Pressure <= 100)
+  if (mode)
   {
-    if (++i >= 800)
+    if (Pressure >= 4000 || Pressure <= 100)
     {
-      i = 800;
-      if (PressureErrorFlag == 0)
+      if (++i >= 400)
       {
-        PressureErrorFlag = 1;
-        INLINE_MUSIC_ERROR();
-        PUMPL_PIN = 0;
-        PUMPR_PIN = 0;
+        i = 400;
+        if (PressureErrorFlag == 0)
+        {
+          PressureErrorFlag = 1;
+          INLINE_MUSIC_ERROR();
+          PUMPL_PIN = 0;
+          PUMPR_PIN = 0;
+          SOLENOLDS_PIN = 0;
+          SOLENOLDP_PIN = 0;
+          OLENOOL_PIN = 0;
+          cnt = 0;
+          step = 1;
+        }
+      }
+    }
+    else
+    {
+      if (i >= 25)
+        i -= 25;
+      else
+        i = 0;
+      if (i == 0)
+        PressureErrorFlag = 0;
+    }
+
+    if (PressureErrorFlag == 0)
+    {
+      switch (step)
+      {
+      case 1:
+      {
+        OLENOOL_PIN = 1;
+        SOLENOLDS_PIN = 1;
+        if (Pressure >= PressureTable[mode][0])
+        {
+          PUMPL_PIN = 0;
+          PUMPR_PIN = 0;
+          OLENOOL_PIN = 0;
+          if (++cnt >= 500)
+          {
+            cnt = 0;
+            step++;
+          }
+        }
+        else
+        {
+          PUMPL_PIN = 1;
+          PUMPR_PIN = 1;
+        }
+        break;
+      }
+      case 2:
+      {
+        SOLENOLDP_PIN = 1;
+        if (Pressure >= PressureTable[mode][1])
+        {
+          PUMPL_PIN = 0;
+          PUMPR_PIN = 0;
+          if (++cnt >= 1400)
+          {
+            cnt = 0;
+            step++;
+          }
+        }
+        else
+        {
+          PUMPL_PIN = 1;
+          PUMPR_PIN = 1;
+        }
+        break;
+      }
+      case 3:
+      {
         SOLENOLDS_PIN = 0;
+        if (++cnt >= 600)
+        {
+          cnt = 0;
+          step++;
+        }
+        break;
+      }
+      case 4:
+      {
         SOLENOLDP_PIN = 0;
+        if (++cnt >= 600)
+        {
+          cnt = 0;
+          step = 1;
+        }
+        break;
+      }
+      default:
+      {
+        step = 1;
+        break;
+      }
       }
     }
   }
   else
   {
-    if (i >= 25)
-      i -= 25;
-    else
-      i = 0;
-    if (i == 0)
-      PressureErrorFlag = 0;
-
-    if (Pressure >= 1813)
-    {
-      PUMPL_PIN = 0;
-      PUMPR_PIN = 0;
-      SOLENOLDS_PIN = 0;
-      SOLENOLDP_PIN = 0;
-      cnt = 0;
-    }
-    else if (Pressure <= 592)
-    {
-      if (++cnt >= 300)
-      {
-        cnt = 300;
-        PUMPL_PIN = 1;
-        PUMPR_PIN = 1;
-        SOLENOLDS_PIN = 1;
-        SOLENOLDP_PIN = 1;
-      }
-    }
+    PUMPL_PIN = 0;
+    PUMPR_PIN = 0;
+    SOLENOLDS_PIN = 0;
+    SOLENOLDP_PIN = 0;
+    OLENOOL_PIN = 0;
+    cnt = 0;
+    step = 1;
   }
 }
 
-void PressureWork(void)
+void shockRun()
 {
+  static u16 cnt = 0;
+  static u8 step = 1;
+  if (FlagState.shock)
+  {
+    switch (step)
+    {
+    case 1:
+    {
+      if (++cnt >= 700)
+        step++;
+      else
+        MOTOR1_PIN = 1;
+      break;
+    }
+    case 2:
+    {
 
+      if (++cnt >= 200)
+        step++;
+      else
+        MOTOR1_PIN = 0;
+      break;
+    }
+    case 3:
+    {
+
+      if (++cnt >= 200)
+        step++;
+      else
+        MOTOR1_PIN = 1;
+      break;
+    }
+    case 4:
+    {
+
+      if (++cnt >= 200)
+        step++;
+      else
+        MOTOR1_PIN = 0;
+      break;
+    }
+    case 5:
+    {
+
+      if (++cnt >= 200)
+        step++;
+      else
+        MOTOR1_PIN = 1;
+      break;
+    }
+    case 6:
+    {
+
+      if (++cnt >= 200)
+        step = 1;
+      else
+        MOTOR1_PIN = 0;
+      break;
+    }
+    default:
+    {
+      step = 1;
+      break;
+    }
+    }
+  }
+  else
+  {
+    step = 1;
+    cnt = 0;
+    MOTOR1_PIN = 0;
+  }
 }
 
 #define DisTemp() {SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]); \
@@ -537,6 +705,21 @@ void main(void)
               SendData_UART1((u8)Temperature1);
               SendData_UART1(Temperature2>>8);
               SendData_UART1((u8)Temperature2);
+              if (Ntc1ErrorFlag)
+              {
+                SMG_One_Display(DIG1, DIG_Dis[1]);
+                SMG_One_Display(DIG2, DIG_Dis[11]);
+              }
+              else if (Ntc2ErrorFlag)
+              {
+                SMG_One_Display(DIG1, DIG_Dis[2]);
+                SMG_One_Display(DIG2, DIG_Dis[11]);
+              }
+              else if (PressureErrorFlag)
+              {
+                SMG_One_Display(DIG1, DIG_Dis[3]);
+                SMG_One_Display(DIG2, DIG_Dis[11]);
+              }
             }
           }
           TaskNumber++;
@@ -548,20 +731,11 @@ void main(void)
           {
             if (mode)
             {
-              if (FlagState.shock)
-                MOTOR1_PIN = 1;
-              else
-                MOTOR1_PIN = 0;
-              PressureProcess();
-              PressureWork();
+              shockRun();
               WorkTimeDeal();
             }
             else
             {
-              PUMPL_PIN = 0;
-              PUMPR_PIN = 0;
-              SOLENOLDS_PIN = 0;
-              SOLENOLDP_PIN = 0;
               MOTOR1_PIN = 0;
             }
             if(FlagState.heat)
@@ -579,14 +753,11 @@ void main(void)
             mode = 0;
             FlagState.shock = 0;
             FlagState.heat = 0;
-            LAMP2_PIN = 0;
             MOTOR1_PIN = 0;
-            PUMPL_PIN = 0;
-            PUMPR_PIN = 0;
-            LAMP1_PIN = 0;
-            SOLENOLDS_PIN = 0;
-            SOLENOLDP_PIN = 0;
-          }     
+            TempWork1 = 0;
+            TempWork2 = 0;
+          }
+          PressureProcess(mode);     
           TaskNumber = 1;
           break;
         }

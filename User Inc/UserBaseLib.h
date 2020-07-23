@@ -105,6 +105,8 @@ extern u8 UART1BusyFlag;
 #define Key_Get() TM1650_Key();
 
 extern u8 TempIntensity, BIOIntensity;
-//void HeatPWM(u8 i, u8 Work);
+extern u8 TempWork1, TempWork2, TempStage1, TempStage2;
+void HeatPWM(u8 i, u8 Work);
+void HeatPWM2(u8 i, u8 Work);
 
 #endif
