@@ -208,12 +208,12 @@ void HeatPWM2(u8 i, u8 Work)
 }
 
 //Temperature Process
-const u16 TemperatureTable[] = {0, 1505, 1490, 1480, 1470, 1460,
-                                1450, 1440, 1430, 1420, 1410,
-                                1400, 1390, 1380, 1370, 1360,
-                                1350, 1340, 1330, 1320, 1310, 
-                                1296, 1196, 1096, 996, 796, 
-                                596};
+const u16 TemperatureTable[] = {0, 1664, 1629, 1594, 1559, 1524,
+                                1488, 1448, 1408, 1368, 1328,
+                                1290, 1261, 1232, 1203, 1174,
+                                1144, 1117, 1090, 1063, 1036, 
+                                1008, 980, 952, 924, 896, 
+                                868};
 u16 Temperature1 = 0;
 static u8 Ntc1ErrorFlag = 0;
 void TemperatureProcess1(void)
@@ -243,7 +243,7 @@ void TemperatureProcess1(void)
 		if(i==0)
 			Ntc1ErrorFlag = 0;
 TempStage1 = 3;
-		if(Temperature1>=TemperatureTable[TempIntensity]+16)
+		if(Temperature1>=TemperatureTable[TempIntensity]+25)
 			TempWork1 = 1;
 		if(Temperature1<=TemperatureTable[TempIntensity])
 			TempWork1 = 0;
@@ -278,8 +278,8 @@ void TemperatureProcess2(void)
 			i = 0;
 		if(i==0)
 			Ntc2ErrorFlag = 0;
-TempStage1 = 3;
-		if(Temperature2>=TemperatureTable[TempIntensity]+16)
+TempStage2 = 3;
+		if(Temperature2>=TemperatureTable[TempIntensity]+25)
 			TempWork2 = 1;
 		if(Temperature2<=TemperatureTable[TempIntensity])
 			TempWork2 = 0;
@@ -288,7 +288,7 @@ TempStage1 = 3;
 
 u16 Pressure = 0;
 static u8 PressureErrorFlag = 0;
-static const u16 PressureTable[4][2] = {{0, 0}, {0X077A, 0X0744}, {0X0785, 0X0750}, {0X078B, 0X078B}};
+static const u16 PressureTable[4][2] = {{0, 0}, {4, 2}, {8, 4}, {12, 12}};
 void PressureProcess(u8 mode)
 {
   static u16 cnt = 0;
@@ -334,15 +334,18 @@ void PressureProcess(u8 mode)
       {
         OLENOOL_PIN = 1;
         SOLENOLDS_PIN = 1;
-        if (Pressure >= PressureTable[mode][0])
+        SOLENOLDP_PIN = 1;
+        if (Pressure >= 1925 || cnt >= 5)
         {
-          PUMPL_PIN = 0;
-          PUMPR_PIN = 0;
-          OLENOOL_PIN = 0;
-          if (++cnt >= 500)
+          if(++cnt>=PressureTable[mode][0]+5)
           {
-            cnt = 0;
-            step++;
+            PUMPL_PIN = 0;
+            PUMPR_PIN = 0;
+            if (cnt >= PressureTable[mode][0]+5+10)
+            {
+              cnt = 0;
+              step++;
+            }
           }
         }
         else
@@ -354,15 +357,20 @@ void PressureProcess(u8 mode)
       }
       case 2:
       {
+        OLENOOL_PIN = 0;
+        SOLENOLDS_PIN = 1;
         SOLENOLDP_PIN = 1;
-        if (Pressure >= PressureTable[mode][1])
+        if (Pressure >= 1925 || cnt >= 5)
         {
-          PUMPL_PIN = 0;
-          PUMPR_PIN = 0;
-          if (++cnt >= 1400)
+          if(++cnt>=PressureTable[mode][1]+5)
           {
-            cnt = 0;
-            step++;
+            PUMPL_PIN = 0;
+            PUMPR_PIN = 0;
+            if (cnt >= PressureTable[mode][1]+5+28)
+            {
+              cnt = 0;
+              step++;
+            }
           }
         }
         else
@@ -375,7 +383,8 @@ void PressureProcess(u8 mode)
       case 3:
       {
         SOLENOLDS_PIN = 0;
-        if (++cnt >= 600)
+        SOLENOLDP_PIN = 1;
+        if (++cnt >= 12)
         {
           cnt = 0;
           step++;
@@ -384,8 +393,9 @@ void PressureProcess(u8 mode)
       }
       case 4:
       {
+        SOLENOLDS_PIN = 1;
         SOLENOLDP_PIN = 0;
-        if (++cnt >= 600)
+        if (++cnt >= 12)
         {
           cnt = 0;
           step = 1;
@@ -524,15 +534,15 @@ void main(void)
   //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
   clr_P2S_0; //POWER KEY, HIZ mode
 
-  P00_PushPull_Mode; LAMP2_PIN = 0; 
-  P01_PushPull_Mode; MOTOR1_PIN = 0; 
-  P03_PushPull_Mode; PUMPL_PIN = 0; 
-  P04_PushPull_Mode; PUMPR_PIN = 0; 
-  P10_PushPull_Mode; LAMP1_PIN = 0;
-  P11_PushPull_Mode; SOLENOLDS_PIN = 0;
-  P12_PushPull_Mode; SOLENOLDP_PIN = 0;
+  P00_PushPull_Mode; PUMPR_PIN = 0; 
+  P01_PushPull_Mode; SOLENOLDP_PIN = 0; 
+  P03_PushPull_Mode; SOLENOLDS_PIN = 0; 
+  P04_PushPull_Mode; OLENOOL_PIN = 0; 
+  P10_PushPull_Mode; PUMPL_PIN = 0;
+  P11_PushPull_Mode; MOTOR1_PIN = 0;
+  P12_PushPull_Mode; LAMP2_PIN = 0;
   P15_PushPull_Mode; SOUND_PIN = 0;
-  P06_PushPull_Mode; OLENOOL_PIN = 0; 
+  P06_PushPull_Mode; LAMP1_PIN = 0; 
   P07_PushPull_Mode; CHANNEL1_PIN = 0;
 
   #ifndef DEBUG
@@ -710,19 +720,19 @@ void main(void)
         }
         case 4: //AD sample
         {
-          if(FlagState.work)
+          if (++cnt1s >= 50)
           {
-            if (++cnt1s>=100)
+            cnt1s = 0;
+            if (FlagState.work)
             {
-              cnt1s = 0;
               Pressure = AD1Sample(0);
-              Temperature1 = AD1Sample(1);
-              Temperature2 = AD1Sample(4);
-              SendData_UART1(Pressure>>8);
+              Temperature2 = AD1Sample(1);
+              Temperature1 = AD1Sample(4);
+              SendData_UART1(Pressure >> 8);
               SendData_UART1((u8)Pressure);
-              SendData_UART1(Temperature1>>8);
+              SendData_UART1(Temperature1 >> 8);
               SendData_UART1((u8)Temperature1);
-              SendData_UART1(Temperature2>>8);
+              SendData_UART1(Temperature2 >> 8);
               SendData_UART1((u8)Temperature2);
               if (Ntc1ErrorFlag)
               {
@@ -740,6 +750,7 @@ void main(void)
                 SMG_One_Display(DIG2, DIG_Dis[11]);
               }
             }
+            PressureProcess(mode);
           }
           TaskNumber++;
           break;
@@ -775,8 +786,7 @@ void main(void)
             MOTOR1_PIN = 0;
             TempWork1 = 0;
             TempWork2 = 0;
-          }
-          PressureProcess(mode);     
+          }   
           TaskNumber = 1;
           break;
         }

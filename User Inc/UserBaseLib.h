@@ -40,14 +40,14 @@ extern u8 BeeMod, BeeTime;
 void BeeFunction(void);
 
 //App define
-#define OLENOOL_PIN P06
-#define SOLENOLDP_PIN P12
-#define SOLENOLDS_PIN P11
-#define LAMP1_PIN P10
-#define LAMP2_PIN P00
-#define MOTOR1_PIN P01
-#define PUMPL_PIN P03
-#define PUMPR_PIN P04
+#define OLENOOL_PIN P04
+#define SOLENOLDP_PIN P01
+#define SOLENOLDS_PIN P03
+#define LAMP1_PIN P06
+#define LAMP2_PIN P12
+#define MOTOR1_PIN P11
+#define PUMPL_PIN P10
+#define PUMPR_PIN P00
 #define CHANNEL1_PIN P07
 #define SOUND_PIN P15
 
