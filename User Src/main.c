@@ -773,6 +773,11 @@ void main(void)
               TemperatureProcess1();
               TemperatureProcess2();
             }
+            else
+            {
+              TempWork1 = 0;
+              TempWork2 = 0;
+            }
           }
           else
           {
