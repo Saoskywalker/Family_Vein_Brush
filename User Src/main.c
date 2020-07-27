@@ -288,7 +288,7 @@ TempStage2 = 3;
 
 u16 Pressure = 0;
 static u8 PressureErrorFlag = 0;
-static const u16 PressureTable[4][2] = {{0, 0}, {4, 2}, {8, 4}, {12, 12}};
+/* static const u16 PressureTable[4][2] = {{0, 0}, {4, 2}, {8, 4}, {12, 12}};
 void PressureProcess(u8 mode)
 {
   static u16 cnt = 0;
@@ -367,6 +367,140 @@ void PressureProcess(u8 mode)
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
             if (cnt >= PressureTable[mode][1]+5+28)
+            {
+              cnt = 0;
+              step++;
+            }
+          }
+        }
+        else
+        {
+          PUMPL_PIN = 1;
+          PUMPR_PIN = 1;
+        }
+        break;
+      }
+      case 3:
+      {
+        SOLENOLDS_PIN = 0;
+        SOLENOLDP_PIN = 1;
+        if (++cnt >= 12)
+        {
+          cnt = 0;
+          step++;
+        }
+        break;
+      }
+      case 4:
+      {
+        SOLENOLDS_PIN = 1;
+        SOLENOLDP_PIN = 0;
+        if (++cnt >= 12)
+        {
+          cnt = 0;
+          step = 1;
+        }
+        break;
+      }
+      default:
+      {
+        step = 1;
+        break;
+      }
+      }
+    }
+  }
+  else
+  {
+    PUMPL_PIN = 0;
+    PUMPR_PIN = 0;
+    SOLENOLDS_PIN = 0;
+    SOLENOLDP_PIN = 0;
+    OLENOOL_PIN = 0;
+    cnt = 0;
+    step = 1;
+  }
+} */
+
+static const u16 PressureTable[4] = {0, 443, 559, 901};
+void PressureProcess(u8 mode)
+{
+  static u16 cnt = 0;
+  static u16 i = 0;
+  static u8 step = 1;
+
+  if (mode)
+  {
+    if (Pressure >= 4000 || Pressure <= 100)
+    {
+      if (++i >= 400)
+      {
+        i = 400;
+        if (PressureErrorFlag == 0)
+        {
+          PressureErrorFlag = 1;
+          INLINE_MUSIC_ERROR();
+          PUMPL_PIN = 0;
+          PUMPR_PIN = 0;
+          SOLENOLDS_PIN = 0;
+          SOLENOLDP_PIN = 0;
+          OLENOOL_PIN = 0;
+          cnt = 0;
+          step = 1;
+        }
+      }
+    }
+    else
+    {
+      if (i >= 25)
+        i -= 25;
+      else
+        i = 0;
+      if (i == 0)
+        PressureErrorFlag = 0;
+    }
+
+    if (PressureErrorFlag == 0)
+    {
+      switch (step)
+      {
+      case 1:
+      {
+        OLENOOL_PIN = 1;
+        SOLENOLDS_PIN = 1;
+        SOLENOLDP_PIN = 1;
+        if (Pressure >= PressureTable[mode] || cnt >= 2)
+        {
+          if(++cnt>=2)
+          {
+            PUMPL_PIN = 0;
+            PUMPR_PIN = 0;
+            if (cnt >= 2+10)
+            {
+              cnt = 0;
+              step++;
+            }
+          }
+        }
+        else
+        {
+          PUMPL_PIN = 1;
+          PUMPR_PIN = 1;
+        }
+        break;
+      }
+      case 2:
+      {
+        OLENOOL_PIN = 0;
+        SOLENOLDS_PIN = 1;
+        SOLENOLDP_PIN = 1;
+        if (Pressure >= PressureTable[mode] || cnt >= 2)
+        {
+          if(++cnt>=2)
+          {
+            PUMPL_PIN = 0;
+            PUMPR_PIN = 0;
+            if (cnt >= 2+28)
             {
               cnt = 0;
               step++;
