@@ -663,6 +663,8 @@ void main(void)
   u8 mode = 0;
   u8 cnt1s = 0;
   u16 KeyCnt = 0;
+  const u8 TestKey[] = {1, 1, 3, 6, 2, 2};
+  u8 KeyTemp[6], kkk = 0, testFlag = 0;
 
   //io init 
   //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
@@ -847,6 +849,41 @@ void main(void)
               else if (mode == 1)
                 BIT_SET(DIG2_Dis, 5);
               SMG_One_Display(DIG3, DIG2_Dis);
+            }
+          }
+          else //produce test code
+          {
+            if ((KeyValue == KEY_TEMP_UP) && KeyUp)
+              {KeyTemp[kkk] = 1; KeyUp = 0; kkk++;}
+            else if ((KeyValue == KEY_TEMP_DOWN) && KeyUp)
+              {KeyTemp[kkk] = 2; KeyUp = 0; kkk++;}
+            else if ((KeyValue == KEY_HEAT) && KeyUp)
+              {KeyTemp[kkk] = 3; KeyUp = 0; kkk++;}
+            else if ((KeyValue == KEY_SYRENGTH) && KeyUp)
+              {KeyTemp[kkk] = 5; KeyUp = 0; kkk++;}
+            else if ((KeyValue == KEY_VIBRATON) && KeyUp)
+              {KeyTemp[kkk] = 6; KeyUp = 0; kkk++;}
+            if(kkk>=6)
+            {
+              for (kkk = 0; kkk < 6; kkk++)
+              {
+                if(KeyTemp[kkk]!=TestKey[kkk])
+                  break;
+              } 
+              if(kkk==6) //key marry
+              {
+                WorkTime = 10800; //3 hour
+                TempIntensity = 26;
+                FlagState.heat = 1;
+                FlagState.shock = 1;
+                mode = 3;
+                TM1650_Light(8);
+                DisTemp();
+                DIG2_Dis = 0XFD;
+                SMG_One_Display(DIG3, DIG2_Dis); //version
+                FlagState.work = 1;
+              }
+              kkk = 0;
             }
           }
           TaskNumber++;
