@@ -683,7 +683,7 @@ void main(void)
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  Uart1Init(115200);
+  // Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
@@ -862,12 +862,12 @@ void main(void)
               Pressure = AD1Sample(0);
               Temperature2 = AD1Sample(1);
               Temperature1 = AD1Sample(4);
-              SendData_UART1(Pressure >> 8);
-              SendData_UART1((u8)Pressure);
-              SendData_UART1(Temperature1 >> 8);
-              SendData_UART1((u8)Temperature1);
-              SendData_UART1(Temperature2 >> 8);
-              SendData_UART1((u8)Temperature2);
+              // SendData_UART1(Pressure >> 8);
+              // SendData_UART1((u8)Pressure);
+              // SendData_UART1(Temperature1 >> 8);
+              // SendData_UART1((u8)Temperature1);
+              // SendData_UART1(Temperature2 >> 8);
+              // SendData_UART1((u8)Temperature2);
               if (Ntc1ErrorFlag)
               {
                 SMG_One_Display(DIG1, DIG_Dis[1]);
