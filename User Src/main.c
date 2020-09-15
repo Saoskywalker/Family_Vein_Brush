@@ -112,6 +112,7 @@ void BeeFunction(void)
 
 u16 WorkTime = 959;
 u8 disShift = 0;
+u8 storageError = 0;
 void WorkTimeDeal(void)
 {
   static u16 WorkTimeDis = 0;
@@ -655,6 +656,12 @@ void shockRun()
                   SMG_One_Display(DIG2, DIG_Dis[(TempIntensity + 29) / 10]); \
                   disShift = 0;}
 
+#define PRESSURE_HIGH_ADDR 0X4406
+#define PRESSURE_MIDDLE_ADDR 0X4404
+#define PRESSURE_LOW_ADDR 0X4402
+#define ADJUST_FLAG_ADDR 0X4400
+const u16 storageAddress[] = {ADJUST_FLAG_ADDR, PRESSURE_LOW_ADDR, PRESSURE_MIDDLE_ADDR, PRESSURE_HIGH_ADDR};
+
 void main(void)
 { 
   u8 DIG3_Dis_Temp = 0;
@@ -664,7 +671,9 @@ void main(void)
   u8 cnt1s = 0;
   u16 KeyCnt = 0;
   const u8 TestKey[] = {1, 1, 3, 6, 2, 2};
-  u8 KeyTemp[6], kkk = 0, testFlag = 0;
+  const u8 AdjustKey[] = {1, 1, 3, 3, 5, 5};
+  u8 KeyTemp[6], kkk = 0, testFlag = 0, adjustFlag = 0;
+  u16 tempValue = 0;
 
   //io init 
   //note: after power up, N76E003 IO is only input(float) mode, P0,P1,P3 is 1 P2 only input mode
@@ -685,7 +694,7 @@ void main(void)
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  // Uart1Init(115200);
+  Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
@@ -797,17 +806,44 @@ void main(void)
             {
               KeyUp = 0;
               INLINE_MUSIC_BUTTON();  
-              if (FlagState.heat)
+              if(adjustFlag)
               {
-                FlagState.heat = 0;
-                BIT_CLEAR(DIG2_Dis, 3);
+                Write_DATAFLASH_BYTE(storageAddress[mode], (u8)Pressure);
+                Write_DATAFLASH_BYTE(storageAddress[mode]+1, Pressure>>8);
+                tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[mode]+1))<<8)+ \
+                            Read_APROM_BYTE((unsigned int code *)storageAddress[mode]);
+                if(tempValue!=Pressure)
+                  storageError = 1;
+                tempValue = (u16)Read_APROM_BYTE((unsigned int code *)storageAddress[0]);
+                if(tempValue==0X00FF)
+                  tempValue = 0;
+                tempValue = tempValue&0X00FF;
+                tempValue = tempValue|(1<<mode);
+                Write_DATAFLASH_BYTE(storageAddress[0], (u8)tempValue);
+                if(tempValue != Read_APROM_BYTE((unsigned int code *)storageAddress[0]))
+                  storageError = 1; 
+
+                SendData_UART1(Pressure >> 8);
+                SendData_UART1((u8)Pressure);
+                SendData_UART1(tempValue >> 8);
+                SendData_UART1((u8)tempValue);
+                SendData_UART1(0XB);
+                SendData_UART1(0XB);
               }
               else
               {
-                FlagState.heat = 1;
-                BIT_SET(DIG2_Dis, 3);
+                if (FlagState.heat)
+                {
+                  FlagState.heat = 0;
+                  BIT_CLEAR(DIG2_Dis, 3);
+                }
+                else
+                {
+                  FlagState.heat = 1;
+                  BIT_SET(DIG2_Dis, 3);
+                }
+                SMG_One_Display(DIG3, DIG2_Dis);
               }
-              SMG_One_Display(DIG3, DIG2_Dis);
             }
             else if ((KeyValue == KEY_VIBRATON) && KeyUp)
             {
@@ -851,7 +887,7 @@ void main(void)
               SMG_One_Display(DIG3, DIG2_Dis);
             }
           }
-          else //produce test code
+          else
           {
             if ((KeyValue == KEY_TEMP_UP) && KeyUp)
               {KeyTemp[kkk] = 1; KeyUp = 0; kkk++;}
@@ -869,9 +905,9 @@ void main(void)
               {
                 if(KeyTemp[kkk]!=TestKey[kkk])
                   break;
-              } 
-              if(kkk==6) //key marry
-              {
+              }
+              if (kkk == 6)       //key marry
+              {                   //produce test code
                 WorkTime = 10800; //3 hour
                 TempIntensity = 26;
                 FlagState.heat = 1;
@@ -882,6 +918,23 @@ void main(void)
                 DIG2_Dis = 0XFD;
                 SMG_One_Display(DIG3, DIG2_Dis); //version
                 FlagState.work = 1;
+              }
+              else
+              {
+                for (kkk = 0; kkk < 6; kkk++)
+                {
+                  if (KeyTemp[kkk] != AdjustKey[kkk])
+                    break;
+                }
+                if (kkk == 6)       //key marry
+                {                   //adjust code
+                  TM1650_Light(8);
+                  DIG2_Dis = 0XFB;
+                  SMG_One_Display(DIG3, DIG2_Dis);
+                  mode = 1;
+                  FlagState.work = 1;
+                  adjustFlag = 1;
+                }
               }
               kkk = 0;
             }

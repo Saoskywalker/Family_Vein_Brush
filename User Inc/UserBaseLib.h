@@ -35,6 +35,8 @@ void Tim2_Time_Upmode_conf(uint16_t TIM2_Period);
 void PWM_Init(uint16_t Period, uint16_t pules);
 void AD1Init(void);
 u16 AD1Sample(u8 channel);
+unsigned char Read_APROM_BYTE(unsigned int code *u16_addr);
+void Write_DATAFLASH_BYTE(unsigned int u16EPAddr,unsigned char u8EPData);
 
 extern u8 BeeMod, BeeTime;
 void BeeFunction(void);
