@@ -112,7 +112,6 @@ void BeeFunction(void)
 
 u16 WorkTime = 959;
 u8 disShift = 0;
-u8 storageError = 0;
 void WorkTimeDeal(void)
 {
   static u16 WorkTimeDis = 0;
@@ -423,7 +422,7 @@ void PressureProcess(u8 mode)
   }
 } */
 
-static const u16 PressureTable[4] = {0, 443, 559, 901};
+static u16 PressureTable[4] = {0, 443, 559, 901};
 void PressureProcess(u8 mode)
 {
   static u16 cnt = 0;
@@ -534,6 +533,113 @@ void PressureProcess(u8 mode)
         {
           cnt = 0;
           step = 1;
+        }
+        break;
+      }
+      default:
+      {
+        step = 1;
+        break;
+      }
+      }
+    }
+  }
+  else
+  {
+    PUMPL_PIN = 0;
+    PUMPR_PIN = 0;
+    SOLENOLDS_PIN = 0;
+    SOLENOLDP_PIN = 0;
+    OLENOOL_PIN = 0;
+    cnt = 0;
+    step = 1;
+  }
+}
+
+#define MAX_PRESSURE 1800
+#define MIN_PRESSURE 100
+void PressureAdjust(u8 mode)
+{
+  static u16 cnt = 0;
+  static u16 i = 0;
+  static u8 step = 1, oldMode = 0;
+
+  if (oldMode != mode)
+  {
+    oldMode = mode;
+    cnt = 0;
+    step = 2;
+  }
+  if (mode)
+  {
+    if (Pressure >= 4000 || Pressure <= 100)
+    {
+      if (++i >= 400)
+      {
+        i = 400;
+        if (PressureErrorFlag == 0)
+        {
+          PressureErrorFlag = 1;
+          INLINE_MUSIC_ERROR();
+          PUMPL_PIN = 0;
+          PUMPR_PIN = 0;
+          SOLENOLDS_PIN = 0;
+          SOLENOLDP_PIN = 0;
+          OLENOOL_PIN = 0;
+          cnt = 0;
+          step = 1;
+        }
+      }
+    }
+    else
+    {
+      if (i >= 25)
+        i -= 25;
+      else
+        i = 0;
+      if (i == 0)
+        PressureErrorFlag = 0;
+    }
+
+    if (PressureErrorFlag == 0)
+    {
+      switch (step)
+      {
+      case 1:
+      {
+        OLENOOL_PIN = 1;
+        SOLENOLDS_PIN = 1;
+        SOLENOLDP_PIN = 1;
+        if (Pressure >= MAX_PRESSURE || cnt >= 2)
+        {
+          if(++cnt>=2)
+          {
+            PUMPL_PIN = 0;
+            PUMPR_PIN = 0;
+            if (cnt >= 2+10)
+            {
+              cnt = 0;
+              step++;
+            }
+          }
+        }
+        else
+        {
+          PUMPL_PIN = 1;
+          PUMPR_PIN = 1;
+        }
+        break;
+      }
+      case 2:
+      {
+        PUMPL_PIN = 0;
+        PUMPR_PIN = 0;
+        SOLENOLDS_PIN = 0;
+        SOLENOLDP_PIN = 1;
+        if (++cnt >= 12)
+        {
+          cnt = 0;
+          step++;
         }
         break;
       }
@@ -672,7 +778,7 @@ void main(void)
   u16 KeyCnt = 0;
   const u8 TestKey[] = {1, 1, 3, 6, 2, 2};
   const u8 AdjustKey[] = {1, 1, 3, 3, 5, 5};
-  u8 KeyTemp[6], kkk = 0, testFlag = 0, adjustFlag = 0;
+  u8 KeyTemp[6], kkk = 0, storageError = 0, adjustFlag = 0;
   u16 tempValue = 0;
 
   //io init 
@@ -704,6 +810,24 @@ void main(void)
   TM1650_Init(0, 0);
 
   FlagState.work = 0;
+
+  //read adjust value
+  if (Read_APROM_BYTE((unsigned int code *)storageAddress[0])==0X0E)
+  {
+    tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[1] + 1)) << 8) +
+                Read_APROM_BYTE((unsigned int code *)storageAddress[1]);
+    PressureTable[1] = tempValue;
+    tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[2] + 1)) << 8) +
+                Read_APROM_BYTE((unsigned int code *)storageAddress[2]);
+    PressureTable[2] = tempValue;
+    tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[3] + 1)) << 8) +
+                Read_APROM_BYTE((unsigned int code *)storageAddress[3]);
+    PressureTable[3] = tempValue;
+  }
+  else
+  {
+    storageError = 1;
+  }
 
   while (1)
   {
@@ -808,27 +932,46 @@ void main(void)
               INLINE_MUSIC_BUTTON();  
               if(adjustFlag)
               {
-                Write_DATAFLASH_BYTE(storageAddress[mode], (u8)Pressure);
-                Write_DATAFLASH_BYTE(storageAddress[mode]+1, Pressure>>8);
-                tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[mode]+1))<<8)+ \
-                            Read_APROM_BYTE((unsigned int code *)storageAddress[mode]);
-                if(tempValue!=Pressure)
-                  storageError = 1;
-                tempValue = (u16)Read_APROM_BYTE((unsigned int code *)storageAddress[0]);
-                if(tempValue==0X00FF)
-                  tempValue = 0;
-                tempValue = tempValue&0X00FF;
-                tempValue = tempValue|(1<<mode);
-                Write_DATAFLASH_BYTE(storageAddress[0], (u8)tempValue);
-                if(tempValue != Read_APROM_BYTE((unsigned int code *)storageAddress[0]))
-                  storageError = 1; 
-
-                SendData_UART1(Pressure >> 8);
-                SendData_UART1((u8)Pressure);
-                SendData_UART1(tempValue >> 8);
-                SendData_UART1((u8)tempValue);
-                SendData_UART1(0XB);
-                SendData_UART1(0XB);
+                if (mode && Pressure <= MAX_PRESSURE && Pressure >= MIN_PRESSURE)
+                {
+                  Write_DATAFLASH_BYTE(storageAddress[mode], (u8)Pressure);
+                  Write_DATAFLASH_BYTE(storageAddress[mode] + 1, Pressure >> 8);
+                  tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[mode] + 1)) << 8) + \
+                              Read_APROM_BYTE((unsigned int code *)storageAddress[mode]);
+                  if (tempValue != Pressure)
+                  {
+                    storageError = 1;
+                    BIT_SET(DIG2_Dis, 3);
+                  }
+                  else
+                  {
+                    BIT_CLEAR(DIG2_Dis, 3);
+                  }
+                    
+                  tempValue = (u16)Read_APROM_BYTE((unsigned int code *)storageAddress[0]);
+                  if (tempValue == 0X00FF)
+                    tempValue = 0;
+                  tempValue = tempValue & 0X00FF;
+                  tempValue = tempValue | (1 << mode);
+                  Write_DATAFLASH_BYTE(storageAddress[0], (u8)tempValue);
+                  if (tempValue != Read_APROM_BYTE((unsigned int code *)storageAddress[0]))
+                  {
+                    storageError = 1;
+                    BIT_SET(DIG2_Dis, 3);
+                  }
+                  else
+                  {
+                    BIT_CLEAR(DIG2_Dis, 3);
+                  }
+                  
+                  SMG_One_Display(DIG3, DIG2_Dis);
+                  SendData_UART1(Pressure >> 8);
+                  SendData_UART1((u8)Pressure);
+                  SendData_UART1(tempValue >> 8);
+                  SendData_UART1((u8)tempValue);
+                  SendData_UART1(0XB);
+                  SendData_UART1(0XB);
+                }
               }
               else
               {
@@ -929,11 +1072,12 @@ void main(void)
                 if (kkk == 6)       //key marry
                 {                   //adjust code
                   TM1650_Light(8);
-                  DIG2_Dis = 0XFB;
-                  SMG_One_Display(DIG3, DIG2_Dis);
-                  mode = 1;
                   FlagState.work = 1;
                   adjustFlag = 1;
+                  PressureTable[1] = 3900;
+                  PressureTable[2] = 3900;
+                  PressureTable[3] = 3900;
+                  INLINE_MUSIC_START();
                 }
               }
               kkk = 0;
@@ -973,8 +1117,16 @@ void main(void)
                 SMG_One_Display(DIG1, DIG_Dis[3]);
                 SMG_One_Display(DIG2, DIG_Dis[11]);
               }
+              else if (storageError)
+              {
+                SMG_One_Display(DIG1, DIG_Dis[4]);
+                SMG_One_Display(DIG2, DIG_Dis[11]);
+              }
             }
-            PressureProcess(mode);
+            if (adjustFlag)
+              PressureAdjust(mode);
+            else
+              PressureProcess(mode);
           }
           TaskNumber++;
           break;
