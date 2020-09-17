@@ -635,7 +635,7 @@ void PressureAdjust(u8 mode)
         PUMPL_PIN = 0;
         PUMPR_PIN = 0;
         SOLENOLDS_PIN = 0;
-        SOLENOLDP_PIN = 1;
+        SOLENOLDP_PIN = 0;
         if (++cnt >= 12)
         {
           cnt = 0;
