@@ -777,7 +777,7 @@ void main(void)
   u8 cnt1s = 0;
   u16 KeyCnt = 0;
   const u8 TestKey[] = {1, 1, 3, 6, 2, 2};
-  const u8 AdjustKey[] = {1, 1, 3, 3, 5, 5};
+  const u8 AdjustKey[] = {2, 2, 3, 3, 1, 6};
   u8 KeyTemp[6], kkk = 0, storageError = 0, adjustFlag = 0;
   u16 tempValue = 0;
 
