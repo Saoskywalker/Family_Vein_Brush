@@ -229,7 +229,7 @@ void TemperatureProcess1(void)
 			if(Ntc1ErrorFlag==0)
 			{
 				Ntc1ErrorFlag = 1;
-        INLINE_MUSIC_ERROR();
+        //INLINE_MUSIC_ERROR();
 				TempWork1 = 0;
 			}			
 		}
@@ -800,7 +800,7 @@ void main(void)
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  Uart1Init(115200);
+  //Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
@@ -814,15 +814,16 @@ void main(void)
   //read adjust value
   if (Read_APROM_BYTE((unsigned int code *)storageAddress[0])==0X0E)
   {
-    tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[1] + 1)) << 8) +
-                Read_APROM_BYTE((unsigned int code *)storageAddress[1]);
-    PressureTable[1] = tempValue;
-    tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[2] + 1)) << 8) +
-                Read_APROM_BYTE((unsigned int code *)storageAddress[2]);
-    PressureTable[2] = tempValue;
-    tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[3] + 1)) << 8) +
-                Read_APROM_BYTE((unsigned int code *)storageAddress[3]);
-    PressureTable[3] = tempValue;
+    for (kkk = 1; kkk <= 3; kkk++)
+    {
+      tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[kkk] + 1)) << 8) +
+                  Read_APROM_BYTE((unsigned int code *)storageAddress[kkk]);
+      if(tempValue<=MAX_PRESSURE)
+        PressureTable[kkk] = tempValue;
+      else
+        storageError = 1;
+    }
+    kkk = 0;
   }
   else
   {
@@ -965,12 +966,12 @@ void main(void)
                   }
                   
                   SMG_One_Display(DIG3, DIG2_Dis);
-                  SendData_UART1(Pressure >> 8);
-                  SendData_UART1((u8)Pressure);
-                  SendData_UART1(tempValue >> 8);
-                  SendData_UART1((u8)tempValue);
-                  SendData_UART1(0XB);
-                  SendData_UART1(0XB);
+                  // SendData_UART1(Pressure >> 8);
+                  // SendData_UART1((u8)Pressure);
+                  // SendData_UART1(tempValue >> 8);
+                  // SendData_UART1((u8)tempValue);
+                  // SendData_UART1(0XB);
+                  // SendData_UART1(0XB);
                 }
               }
               else
@@ -1058,7 +1059,7 @@ void main(void)
                 mode = 3;
                 TM1650_Light(8);
                 DisTemp();
-                DIG2_Dis = 0XFD;
+                DIG2_Dis = 0XFB;
                 SMG_One_Display(DIG3, DIG2_Dis); //version
                 FlagState.work = 1;
               }
@@ -1077,7 +1078,8 @@ void main(void)
                   PressureTable[1] = 3900;
                   PressureTable[2] = 3900;
                   PressureTable[3] = 3900;
-                  INLINE_MUSIC_START();
+                  Ntc2ErrorFlag = 1; //clue adjusting
+                  INLINE_MUSIC_ERROR();
                 }
               }
               kkk = 0;
@@ -1102,12 +1104,13 @@ void main(void)
               // SendData_UART1((u8)Temperature1);
               // SendData_UART1(Temperature2 >> 8);
               // SendData_UART1((u8)Temperature2);
-              if (Ntc1ErrorFlag)
-              {
-                SMG_One_Display(DIG1, DIG_Dis[1]);
-                SMG_One_Display(DIG2, DIG_Dis[11]);
-              }
-              else if (Ntc2ErrorFlag)
+              // if (Ntc1ErrorFlag)
+              // {
+              //   SMG_One_Display(DIG1, DIG_Dis[1]);
+              //   SMG_One_Display(DIG2, DIG_Dis[11]);
+              // }
+              // else 
+              if (Ntc2ErrorFlag)
               {
                 SMG_One_Display(DIG1, DIG_Dis[2]);
                 SMG_One_Display(DIG2, DIG_Dis[11]);
@@ -1117,11 +1120,11 @@ void main(void)
                 SMG_One_Display(DIG1, DIG_Dis[3]);
                 SMG_One_Display(DIG2, DIG_Dis[11]);
               }
-              else if (storageError)
-              {
-                SMG_One_Display(DIG1, DIG_Dis[4]);
-                SMG_One_Display(DIG2, DIG_Dis[11]);
-              }
+              // else if (storageError)
+              // {
+              //   SMG_One_Display(DIG1, DIG_Dis[4]);
+              //   SMG_One_Display(DIG2, DIG_Dis[11]);
+              // }
             }
             if (adjustFlag)
               PressureAdjust(mode);
