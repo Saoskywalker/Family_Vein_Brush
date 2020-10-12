@@ -136,20 +136,25 @@ void WorkTimeDeal(void)
       cnt1min = 0;
       FlagState.work = 0;
       DIG2_Dis = 0;
-      SMG_One_Display(DIG3, DIG2_Dis);
-      TM1650_Light(0);
+      //SMG_One_Display(DIG3, DIG2_Dis);
+      // TM1650_Light(0);
+      TM1650_Clear();
+
     }
-    if (++disShift >= 2)
+    if (FlagState.work)
     {
-      disShift = 2;
-      if (secondFlag == 13)
-        secondFlag = 12;
-      else
-        secondFlag = 13;
-      // WorkTimeDis = ((WorkTime + 59) / 60 / 10 << 8) + ((WorkTime + 59) / 60 % 10);
-      WorkTimeDis = ((WorkTime) / 60 / 10 << 8) + ((WorkTime) / 60 % 10);
-      SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
-      SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+      if (++disShift >= 2)
+      {
+        disShift = 2;
+        if (secondFlag == 13)
+          secondFlag = 12;
+        else
+          secondFlag = 13;
+        // WorkTimeDis = ((WorkTime + 59) / 60 / 10 << 8) + ((WorkTime + 59) / 60 % 10);
+        WorkTimeDis = ((WorkTime) / 60 / 10 << 8) + ((WorkTime) / 60 % 10);
+        SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
+        SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+      }
     }
   }
 }
@@ -800,14 +805,14 @@ void main(void)
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  //Uart1Init(115200);
+  // Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
   // delay_init();
   // PWM_Init(0x7CF, 0);
   AD1Init();
-  TM1650_Init(0, 0);
+  TM1650_Init(0, 1);
 
   FlagState.work = 0;
 
@@ -844,6 +849,7 @@ void main(void)
         case 1: //KEY GET AND DISPLAY
         {
           KeyValue = Key_Get();
+          //SendData_UART1(KeyValue);
           TaskNumber++;
           break;
         }
@@ -869,7 +875,8 @@ void main(void)
               INLINE_MUSIC_BUTTON();
               FlagState.work = 0;
               DIG2_Dis = 0;
-              TM1650_Light(0);
+              TM1650_Clear();
+             //TM1650_Light(0);
             }
             else
             {
@@ -877,9 +884,9 @@ void main(void)
               INLINE_MUSIC_BUTTON();
               BIT_SET(DIG2_Dis, 0);
               DisTemp();
-              TM1650_Light(8);
+              SMG_One_Display(DIG3, DIG2_Dis);
+              //TM1650_Light(8);
             }
-            SMG_One_Display(DIG3, DIG2_Dis);
           }
           if (FlagState.work)
           {
@@ -1057,7 +1064,7 @@ void main(void)
                 FlagState.heat = 1;
                 FlagState.shock = 1;
                 mode = 3;
-                TM1650_Light(8);
+                //TM1650_Light(8);
                 DisTemp();
                 DIG2_Dis = 0XFB;
                 SMG_One_Display(DIG3, DIG2_Dis); //version
@@ -1072,7 +1079,7 @@ void main(void)
                 }
                 if (kkk == 6)       //key marry
                 {                   //adjust code
-                  TM1650_Light(8);
+                  //TM1650_Light(8);
                   FlagState.work = 1;
                   adjustFlag = 1;
                   PressureTable[1] = 3900;
@@ -1161,7 +1168,7 @@ void main(void)
           else
           {
             DIG2_Dis = 0;
-            SMG_One_Display(DIG3, DIG2_Dis);
+            //SMG_One_Display(DIG3, DIG2_Dis);
             WorkTime = 959;
             TempIntensity = 1;
             mode = 0;

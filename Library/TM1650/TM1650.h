@@ -25,5 +25,6 @@ u8 TM1650_Init(u8 light, u8 dis);
 u8 TM1650_Key(void);
 void TM1650_Display(u8 add, u8 dat);
 void TM1650_Light(u8 light);
+void TM1650_Clear(void);
  
 #endif

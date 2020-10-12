@@ -155,12 +155,22 @@ void TM1650_Light(u8 light)
 		TM1650_Display(0x48, light<<4|1); //adjust light
 }
 
+//clear display
+void TM1650_Clear(void)
+{
+	TM1650_Display(0X68, 0);	
+	TM1650_Display(0X6A, 0);	
+	TM1650_Display(0X6C, 0);	
+	TM1650_Display(0X6E, 0);
+}
+
 //light: light level: value:0=8 value:1~7=1~7; dis: dis 1 or close 0
 u8 TM1650_Init(u8 light, u8 dis)  //init tm1650
 {
 	IIC_Init_TM1650();
 	delay_ms(50);			//需要延时一小段时间，否则开显示会无响应
-	TM1650_Display(0x48, light<<4|dis);		
+	TM1650_Display(0x48, light<<4|dis); //系统设置, 注意按键检测需开启显示
+	TM1650_Clear();	
 	if(TM1650_Key()==0XFF)	//check device
 		return 1;	//error
 	else
