@@ -474,13 +474,13 @@ void PressureProcess(u8 mode)
         OLENOOL_PIN = 1;
         SOLENOLDS_PIN = 1;
         SOLENOLDP_PIN = 1;
-        if (Pressure >= PressureTable[mode] || cnt >= 2)
+        if (Pressure >= PressureTable[mode] || cnt >= 4)
         {
-          if(++cnt>=2)
+          if(++cnt>=4)
           {
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
-            if (cnt >= 2+10)
+            if (cnt >= 4+20)
             {
               cnt = 0;
               step++;
@@ -499,13 +499,13 @@ void PressureProcess(u8 mode)
         OLENOOL_PIN = 0;
         SOLENOLDS_PIN = 1;
         SOLENOLDP_PIN = 1;
-        if (Pressure >= PressureTable[mode] || cnt >= 2)
+        if (Pressure >= PressureTable[mode] || cnt >= 4)
         {
-          if(++cnt>=2)
+          if(++cnt>=4)
           {
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
-            if (cnt >= 2+28)
+            if (cnt >= 4+56)
             {
               cnt = 0;
               step++;
@@ -523,7 +523,7 @@ void PressureProcess(u8 mode)
       {
         SOLENOLDS_PIN = 0;
         SOLENOLDP_PIN = 1;
-        if (++cnt >= 12)
+        if (++cnt >= 24)
         {
           cnt = 0;
           step++;
@@ -534,7 +534,7 @@ void PressureProcess(u8 mode)
       {
         SOLENOLDS_PIN = 1;
         SOLENOLDP_PIN = 0;
-        if (++cnt >= 12)
+        if (++cnt >= 24)
         {
           cnt = 0;
           step = 1;
@@ -571,9 +571,9 @@ void PressureAdjust(u8 mode)
 
   if (oldMode != mode)
   {
-    oldMode = mode;
-    cnt = 0;
-    step = 2;
+    // oldMode = mode;
+    // cnt = 0;
+    // step = 2;
   }
   if (mode)
   {
@@ -615,13 +615,13 @@ void PressureAdjust(u8 mode)
         OLENOOL_PIN = 1;
         SOLENOLDS_PIN = 1;
         SOLENOLDP_PIN = 1;
-        if (Pressure >= MAX_PRESSURE || cnt >= 2)
+        if (Pressure >= MAX_PRESSURE || cnt >= 4)
         {
-          if(++cnt>=2)
+          if(++cnt>=4)
           {
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
-            if (cnt >= 2+10)
+            if (cnt >= 4+20)
             {
               cnt = 0;
               step++;
@@ -641,7 +641,7 @@ void PressureAdjust(u8 mode)
         PUMPR_PIN = 0;
         SOLENOLDS_PIN = 0;
         SOLENOLDP_PIN = 0;
-        if (++cnt >= 12)
+        if (++cnt >= 24)
         {
           cnt = 0;
           step++;
@@ -805,7 +805,7 @@ void main(void)
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  // Uart1Init(115200);
+  Uart1Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
@@ -1097,7 +1097,7 @@ void main(void)
         }
         case 4: //AD sample
         {
-          if (++cnt1s >= 50)
+          if (++cnt1s >= 25)
           {
             cnt1s = 0;
             if (FlagState.work)
@@ -1105,8 +1105,8 @@ void main(void)
               Pressure = AD1Sample(0);
               Temperature2 = AD1Sample(1);
               Temperature1 = AD1Sample(4);
-              // SendData_UART1(Pressure >> 8);
-              // SendData_UART1((u8)Pressure);
+              SendData_UART1(Pressure >> 8);
+              SendData_UART1((u8)Pressure);
               // SendData_UART1(Temperature1 >> 8);
               // SendData_UART1((u8)Temperature1);
               // SendData_UART1(Temperature2 >> 8);
