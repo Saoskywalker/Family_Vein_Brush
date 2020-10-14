@@ -478,6 +478,7 @@ void PressureProcess(u8 mode)
         {
           if(++cnt>=4)
           {
+            SendData_UART1(0X00);
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
             if (cnt >= 4+20)
@@ -503,6 +504,7 @@ void PressureProcess(u8 mode)
         {
           if(++cnt>=4)
           {
+            SendData_UART1(0X00);
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
             if (cnt >= 4+56)
@@ -779,7 +781,7 @@ void main(void)
   u8 TaskNumber = 1, KeyValue = 0;
   u8 KeyUp = 0, KeyT = 0;
   u8 mode = 0;
-  u8 cnt1s = 0;
+  u8 cnt250ms = 0;
   u16 KeyCnt = 0;
   const u8 TestKey[] = {1, 1, 3, 6, 2, 2};
   const u8 AdjustKey[] = {2, 2, 3, 3, 1, 6};
@@ -928,11 +930,18 @@ void main(void)
             {
               KeyUp = 0;
               INLINE_MUSIC_BUTTON();
-              if (TempIntensity < 26)
+              if(adjustFlag)
               {
-                TempIntensity++;
+                Write_DATAFLASH_BYTE(storageAddress[0], 0XFF);
               }
-              DisTemp();
+              else
+              {
+                if (TempIntensity < 26)
+                {
+                  TempIntensity++;
+                }
+                DisTemp();
+              }
             }
             else if ((KeyValue == KEY_HEAT) && KeyUp)
             {
@@ -977,8 +986,8 @@ void main(void)
                   // SendData_UART1((u8)Pressure);
                   // SendData_UART1(tempValue >> 8);
                   // SendData_UART1((u8)tempValue);
-                  // SendData_UART1(0XB);
-                  // SendData_UART1(0XB);
+                  // SendData_UART1(0XF0);
+                  SendData_UART1(0XF0);
                 }
               }
               else
@@ -1097,9 +1106,9 @@ void main(void)
         }
         case 4: //AD sample
         {
-          if (++cnt1s >= 25)
+          if (++cnt250ms >= 25)
           {
-            cnt1s = 0;
+            cnt250ms = 0;
             if (FlagState.work)
             {
               Pressure = AD1Sample(0);
