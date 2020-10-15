@@ -23,7 +23,11 @@ History:
 /* Private function prototypes -----------------------------------------------*/
 
 //0 1 2 3 4 5 6 7 8 9 - E . NC
-const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0XE5, 0X02, 0X00}; 
+//0 1 2 3 4 5 6 7 8 9 A B C D E F - . NC
+// const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0XE5, 0X02, 0X00}; 
+const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 
+                      0XFC, 0XCD, 0X85, 0X9D, 0XE5, 0XE4, 
+                      0X80, 0X02, 0X00};
 u8 DIG2_Dis = 0; 
 
 /* //BIO1 PWM
@@ -146,10 +150,10 @@ void WorkTimeDeal(void)
       if (++disShift >= 2)
       {
         disShift = 2;
-        if (secondFlag == 13)
-          secondFlag = 12;
+        if (secondFlag == 18)
+          secondFlag = 17;
         else
-          secondFlag = 13;
+          secondFlag = 18;
         // WorkTimeDis = ((WorkTime + 59) / 60 / 10 << 8) + ((WorkTime + 59) / 60 % 10);
         WorkTimeDis = ((WorkTime) / 60 / 10 << 8) + ((WorkTime) / 60 % 10);
         SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
@@ -427,7 +431,8 @@ void PressureProcess(u8 mode)
   }
 } */
 
-static u16 PressureTable[4] = {0, 443, 559, 901};
+// static u16 PressureTable[4] = {0, 443, 559, 901};
+static u16 PressureTable[4] = {0, 480, 640, 901};
 void PressureProcess(u8 mode)
 {
   static u16 cnt = 0;
@@ -563,7 +568,7 @@ void PressureProcess(u8 mode)
   }
 }
 
-#define MAX_PRESSURE 1800
+#define MAX_PRESSURE 1400
 #define MIN_PRESSURE 100
 void PressureAdjust(u8 mode)
 {
@@ -959,28 +964,32 @@ void main(void)
                   {
                     storageError = 1;
                     BIT_SET(DIG2_Dis, 3);
+                    Write_DATAFLASH_BYTE(storageAddress[0], 0XFF);
                   }
                   else
                   {
-                    BIT_CLEAR(DIG2_Dis, 3);
+                    /*must 3 gear adjust*/
+                    // tempValue = (u16)Read_APROM_BYTE((unsigned int code *)storageAddress[0]);
+                    // if (tempValue == 0X00FF)
+                    //   tempValue = 0;
+                    // tempValue = tempValue & 0X00FF;
+                    // tempValue = tempValue | (1 << mode);
+
+                    /*only a gear adjust*/
+                    tempValue = 0X0E;
+
+                    Write_DATAFLASH_BYTE(storageAddress[0], (u8)tempValue);
+                    if (tempValue != Read_APROM_BYTE((unsigned int code *)storageAddress[0]))
+                    {
+                      storageError = 1;
+                      BIT_SET(DIG2_Dis, 3);
+                    }
+                    else
+                    {
+                      BIT_CLEAR(DIG2_Dis, 3);
+                    }
                   }
-                    
-                  tempValue = (u16)Read_APROM_BYTE((unsigned int code *)storageAddress[0]);
-                  if (tempValue == 0X00FF)
-                    tempValue = 0;
-                  tempValue = tempValue & 0X00FF;
-                  tempValue = tempValue | (1 << mode);
-                  Write_DATAFLASH_BYTE(storageAddress[0], (u8)tempValue);
-                  if (tempValue != Read_APROM_BYTE((unsigned int code *)storageAddress[0]))
-                  {
-                    storageError = 1;
-                    BIT_SET(DIG2_Dis, 3);
-                  }
-                  else
-                  {
-                    BIT_CLEAR(DIG2_Dis, 3);
-                  }
-                  
+
                   SMG_One_Display(DIG3, DIG2_Dis);
                   // SendData_UART1(Pressure >> 8);
                   // SendData_UART1((u8)Pressure);
@@ -1094,7 +1103,11 @@ void main(void)
                   PressureTable[1] = 3900;
                   PressureTable[2] = 3900;
                   PressureTable[3] = 3900;
-                  Ntc2ErrorFlag = 1; //clue adjusting
+                  if(storageError) //clue adjusted or not 
+                  {
+                    BIT_SET(DIG2_Dis, 3);
+                    SMG_One_Display(DIG3, DIG2_Dis);
+                  }
                   INLINE_MUSIC_ERROR();
                 }
               }
@@ -1123,29 +1136,35 @@ void main(void)
               // if (Ntc1ErrorFlag)
               // {
               //   SMG_One_Display(DIG1, DIG_Dis[1]);
-              //   SMG_One_Display(DIG2, DIG_Dis[11]);
+              //   SMG_One_Display(DIG2, DIG_Dis[14]);
               // }
               // else 
               if (Ntc2ErrorFlag)
               {
                 SMG_One_Display(DIG1, DIG_Dis[2]);
-                SMG_One_Display(DIG2, DIG_Dis[11]);
+                SMG_One_Display(DIG2, DIG_Dis[14]);
               }
               else if (PressureErrorFlag)
               {
                 SMG_One_Display(DIG1, DIG_Dis[3]);
-                SMG_One_Display(DIG2, DIG_Dis[11]);
+                SMG_One_Display(DIG2, DIG_Dis[14]);
               }
               // else if (storageError)
               // {
               //   SMG_One_Display(DIG1, DIG_Dis[4]);
-              //   SMG_One_Display(DIG2, DIG_Dis[11]);
+              //   SMG_One_Display(DIG2, DIG_Dis[14]);
               // }
             }
             if (adjustFlag)
+            {
+              SMG_One_Display(DIG1, DIG_Dis[(Pressure>>4)&0X0F]); //one
+              SMG_One_Display(DIG2, DIG_Dis[(Pressure>>8)]); //ten
               PressureAdjust(mode);
+            }
             else
+            {
               PressureProcess(mode);
+            }
           }
           TaskNumber++;
           break;
