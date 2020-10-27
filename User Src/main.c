@@ -22,13 +22,11 @@ History:
 
 /* Private function prototypes -----------------------------------------------*/
 
-//0 1 2 3 4 5 6 7 8 9 - E . NC
 //0 1 2 3 4 5 6 7 8 9 A B C D E F - . NC
-// const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 0X80, 0XE5, 0X02, 0X00}; 
 const u8 DIG_Dis[] = {0X7D, 0X18, 0XB5, 0XB9, 0XD8, 0XE9, 0XED, 0X38, 0XFD, 0XF9, 
                       0XFC, 0XCD, 0X85, 0X9D, 0XE5, 0XE4, 
                       0X80, 0X02, 0X00};
-u8 DIG2_Dis = 0; 
+u8 DIG3_Dis = 0, DIG1_Dis = 0, DIG2_Dis = 0; 
 
 /* //BIO1 PWM
 u8 BIOIntensity = 0;
@@ -115,11 +113,11 @@ void BeeFunction(void)
 }
 
 u16 WorkTime = 959;
-u8 disShift = 0;
+u8 disShift = 0, cnt1min = 0;
 void WorkTimeDeal(void)
 {
   static u16 WorkTimeDis = 0;
-  static u8 secondFlag = 13, cnt1min = 0;
+  static u8 secondFlag = 13;
 
   if (FlagState.s1)
   {
@@ -139,11 +137,10 @@ void WorkTimeDeal(void)
       WorkTime = 959;
       cnt1min = 0;
       FlagState.work = 0;
+      DIG1_Dis = 0;
       DIG2_Dis = 0;
-      //SMG_One_Display(DIG3, DIG2_Dis);
-      // TM1650_Light(0);
-      TM1650_Clear();
-
+      DIG3_Dis = 0;
+      // TM1650_Clear();
     }
     if (FlagState.work)
     {
@@ -156,8 +153,10 @@ void WorkTimeDeal(void)
           secondFlag = 18;
         // WorkTimeDis = ((WorkTime + 59) / 60 / 10 << 8) + ((WorkTime + 59) / 60 % 10);
         WorkTimeDis = ((WorkTime) / 60 / 10 << 8) + ((WorkTime) / 60 % 10);
-        SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
-        SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+        // SMG_One_Display(DIG1, DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag]);
+        // SMG_One_Display(DIG2, DIG_Dis[WorkTimeDis >> 8]);
+        DIG1_Dis = DIG_Dis[WorkTimeDis & 0X00FF] | DIG_Dis[secondFlag];
+        DIG2_Dis = DIG_Dis[WorkTimeDis >> 8];
       }
     }
   }
@@ -770,8 +769,11 @@ void shockRun()
   }
 }
 
-#define DisTemp() {SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]); \
+/* #define DisTemp() {SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]); \
                   SMG_One_Display(DIG2, DIG_Dis[(TempIntensity + 29) / 10]); \
+                  disShift = 0;} */
+#define DisTemp() {DIG1_Dis =  DIG_Dis[(TempIntensity + 29) % 10]; \
+                  DIG2_Dis = DIG_Dis[(TempIntensity + 29) / 10]; \
                   disShift = 0;}
 
 #define PRESSURE_HIGH_ADDR 0X4406
@@ -786,7 +788,7 @@ void main(void)
   u8 TaskNumber = 1, KeyValue = 0;
   u8 KeyUp = 0, KeyT = 0;
   u8 mode = 0;
-  u8 cnt250ms = 0;
+  u8 cnt250ms = 0, cnt500ms = 0, disStep = 0;
   u16 KeyCnt = 0;
   const u8 TestKey[] = {1, 1, 3, 6, 2, 2};
   const u8 AdjustKey[] = {2, 2, 3, 3, 1, 6};
@@ -856,12 +858,25 @@ void main(void)
         case 1: //KEY GET AND DISPLAY
         {
           KeyValue = Key_Get();
-          //SendData_UART1(KeyValue);
           TaskNumber++;
           break;
         }
-        case 2: //UART T&R process
+        case 2: //display process
         {
+          disStep++;
+          if(disStep==1)
+          {
+            SMG_One_Display(DIG1, DIG1_Dis);
+          }
+          else if(disStep==2)
+          {
+            SMG_One_Display(DIG2, DIG2_Dis);
+          }
+          else 
+          {
+            SMG_One_Display(DIG3, DIG3_Dis);
+            disStep = 0;
+          }
           TaskNumber++;
           break;
         }
@@ -881,17 +896,19 @@ void main(void)
             {
               INLINE_MUSIC_BUTTON();
               FlagState.work = 0;
+              DIG3_Dis = 0;
+              DIG1_Dis = 0;
               DIG2_Dis = 0;
-              TM1650_Clear();
+              // TM1650_Clear();
              //TM1650_Light(0);
             }
             else
             {
               FlagState.work = 1;
               INLINE_MUSIC_BUTTON();
-              BIT_SET(DIG2_Dis, 0);
+              BIT_SET(DIG3_Dis, 0);
               DisTemp();
-              SMG_One_Display(DIG3, DIG2_Dis);
+              // SMG_One_Display(DIG3, DIG3_Dis);
               //TM1650_Light(8);
             }
           }
@@ -963,7 +980,7 @@ void main(void)
                   if (tempValue != Pressure)
                   {
                     storageError = 1;
-                    BIT_SET(DIG2_Dis, 3);
+                    BIT_SET(DIG3_Dis, 3);
                     Write_DATAFLASH_BYTE(storageAddress[0], 0XFF);
                   }
                   else
@@ -982,15 +999,15 @@ void main(void)
                     if (tempValue != Read_APROM_BYTE((unsigned int code *)storageAddress[0]))
                     {
                       storageError = 1;
-                      BIT_SET(DIG2_Dis, 3);
+                      BIT_SET(DIG3_Dis, 3);
                     }
                     else
                     {
-                      BIT_CLEAR(DIG2_Dis, 3);
+                      BIT_CLEAR(DIG3_Dis, 3);
                     }
                   }
 
-                  SMG_One_Display(DIG3, DIG2_Dis);
+                  // SMG_One_Display(DIG3, DIG3_Dis);
                   // SendData_UART1(Pressure >> 8);
                   // SendData_UART1((u8)Pressure);
                   // SendData_UART1(tempValue >> 8);
@@ -1004,14 +1021,14 @@ void main(void)
                 if (FlagState.heat)
                 {
                   FlagState.heat = 0;
-                  BIT_CLEAR(DIG2_Dis, 3);
+                  BIT_CLEAR(DIG3_Dis, 3);
                 }
                 else
                 {
                   FlagState.heat = 1;
-                  BIT_SET(DIG2_Dis, 3);
+                  BIT_SET(DIG3_Dis, 3);
                 }
-                SMG_One_Display(DIG3, DIG2_Dis);
+                // SMG_One_Display(DIG3, DIG3_Dis);
               }
             }
             else if ((KeyValue == KEY_VIBRATON) && KeyUp)
@@ -1022,15 +1039,15 @@ void main(void)
                 if (FlagState.shock)
                 {
                   FlagState.shock = 0;
-                  BIT_CLEAR(DIG2_Dis, 4);
+                  BIT_CLEAR(DIG3_Dis, 4);
                 }
                 else
                 {
                   FlagState.shock = 1;
-                  BIT_SET(DIG2_Dis, 4);
+                  BIT_SET(DIG3_Dis, 4);
                 }
                 INLINE_MUSIC_BUTTON();
-                SMG_One_Display(DIG3, DIG2_Dis);
+                // SMG_One_Display(DIG3, DIG3_Dis);
               }
             }
             else if ((KeyValue == KEY_SYRENGTH) && KeyUp)
@@ -1041,19 +1058,19 @@ void main(void)
               {
                 mode = 0;
                 FlagState.shock = 0;
-                BIT_CLEAR(DIG2_Dis, 4);
+                BIT_CLEAR(DIG3_Dis, 4);
                 DisTemp();
               }
-              BIT_CLEAR(DIG2_Dis, 5); //MODE
-              BIT_CLEAR(DIG2_Dis, 2);
-              BIT_CLEAR(DIG2_Dis, 1);
+              BIT_CLEAR(DIG3_Dis, 5); //MODE
+              BIT_CLEAR(DIG3_Dis, 2);
+              BIT_CLEAR(DIG3_Dis, 1);
               if (mode == 3)
-                BIT_SET(DIG2_Dis, 1);
+                BIT_SET(DIG3_Dis, 1);
               else if (mode == 2)
-                BIT_SET(DIG2_Dis, 2);
+                BIT_SET(DIG3_Dis, 2);
               else if (mode == 1)
-                BIT_SET(DIG2_Dis, 5);
-              SMG_One_Display(DIG3, DIG2_Dis);
+                BIT_SET(DIG3_Dis, 5);
+              // SMG_One_Display(DIG3, DIG3_Dis);
             }
           }
           else
@@ -1084,8 +1101,8 @@ void main(void)
                 mode = 3;
                 //TM1650_Light(8);
                 DisTemp();
-                DIG2_Dis = 0XFB;
-                SMG_One_Display(DIG3, DIG2_Dis); //version
+                DIG3_Dis = 0XFB;
+                // SMG_One_Display(DIG3, DIG3_Dis); //version
                 FlagState.work = 1;
               }
               else
@@ -1105,8 +1122,8 @@ void main(void)
                   PressureTable[3] = 3900;
                   if(storageError) //clue adjusted or not 
                   {
-                    BIT_SET(DIG2_Dis, 3);
-                    SMG_One_Display(DIG3, DIG2_Dis);
+                    BIT_SET(DIG3_Dis, 3);
+                    // SMG_One_Display(DIG3, DIG3_Dis);
                   }
                   INLINE_MUSIC_ERROR();
                 }
@@ -1141,13 +1158,17 @@ void main(void)
               // else 
               if (Ntc2ErrorFlag)
               {
-                SMG_One_Display(DIG1, DIG_Dis[2]);
-                SMG_One_Display(DIG2, DIG_Dis[14]);
+                // SMG_One_Display(DIG1, DIG_Dis[2]);
+                // SMG_One_Display(DIG2, DIG_Dis[14]);
+                DIG1_Dis = DIG_Dis[2];
+                DIG2_Dis = DIG_Dis[14];
               }
               else if (PressureErrorFlag)
               {
-                SMG_One_Display(DIG1, DIG_Dis[3]);
-                SMG_One_Display(DIG2, DIG_Dis[14]);
+                // SMG_One_Display(DIG1, DIG_Dis[3]);
+                // SMG_One_Display(DIG2, DIG_Dis[14]);
+                DIG1_Dis = DIG_Dis[3];
+                DIG2_Dis = DIG_Dis[14];
               }
               // else if (storageError)
               // {
@@ -1157,8 +1178,10 @@ void main(void)
             }
             if (adjustFlag)
             {
-              SMG_One_Display(DIG1, DIG_Dis[(Pressure>>4)&0X0F]); //one
-              SMG_One_Display(DIG2, DIG_Dis[(Pressure>>8)]); //ten
+              // SMG_One_Display(DIG1, DIG_Dis[(Pressure>>4)&0X0F]); //one
+              // SMG_One_Display(DIG2, DIG_Dis[(Pressure>>8)]); //ten
+              DIG1_Dis = DIG_Dis[(Pressure>>4)&0X0F];
+              DIG2_Dis = DIG_Dis[(Pressure>>8)];
               PressureAdjust(mode);
             }
             else
@@ -1170,7 +1193,14 @@ void main(void)
           break;
         }
         case 5: //work process
-        { 
+        {
+          if (++cnt500ms >= 50)
+          {
+            if (++cnt500ms >= 50)
+              cnt500ms = 0;
+            TM1650_Display(0X48, 0X01); //循环发, 避免一次发送通信接收错误
+          }
+
           if(FlagState.work)
           {
             if (mode)
@@ -1195,9 +1225,9 @@ void main(void)
           }
           else
           {
-            DIG2_Dis = 0;
-            //SMG_One_Display(DIG3, DIG2_Dis);
+            DIG3_Dis = 0;
             WorkTime = 959;
+            cnt1min = 0;
             TempIntensity = 1;
             mode = 0;
             FlagState.shock = 0;
