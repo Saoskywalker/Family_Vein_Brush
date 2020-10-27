@@ -1,5 +1,139 @@
 #include "TM1650.h"
 
+/*******************官方例程************************/
+#define NOP _nop_();_nop_();_nop_();_nop_();_nop_();_nop_();  //宏定义
+
+/************ START信号*******************************/
+static void TM1650_START(void)
+{
+	SCL_TM1650=1;
+	SDA_TM1650=1;
+	NOP;
+	SDA_TM1650=0;
+	NOP;
+	SCL_TM1650=0;
+}
+/******************** STOP信号************************/
+static void TM1650_STOP(void)
+{
+	SDA_TM1650=0;
+	NOP;
+	SCL_TM1650=1;
+	NOP;
+	SDA_TM1650=1;
+	NOP;
+	SCL_TM1650=0;
+	SDA_TM1650=0;
+}
+/****************写1个字节给TM1650********************/
+static void write_8bit( unsigned char dat)
+{
+ 	unsigned char i;
+	SCL_TM1650=0;
+	for(i=0;i<8;i++)
+		{
+		if(dat&0x80)
+		{
+			SDA_TM1650=1;
+			NOP;
+			NOP;
+			SCL_TM1650=1;
+			NOP;
+			NOP;
+			NOP;
+			NOP;
+			NOP;
+			SCL_TM1650=0;	 
+		}
+		else
+		{
+			SDA_TM1650=0;
+			NOP;
+			NOP;
+			SCL_TM1650=1;
+			NOP;
+			NOP;
+			NOP;
+			NOP;
+			NOP;
+			SCL_TM1650=0;
+		}	
+			dat<<=1;	 
+		}
+		SDA_TM1650=1;			//ACK信号
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		SCL_TM1650=1;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		NOP;
+		SCL_TM1650=0;
+		NOP;
+		NOP;	 
+}
+
+/**********************读8bit**************************/
+static unsigned char read_8bit(void)
+{
+	unsigned char dat,i;
+	SDA_TM1650=1;
+	dat=0;
+	for(i=0;i<8;i++)
+	{
+	SCL_TM1650=1;                        //时钟上沿
+	NOP;
+	NOP;
+	NOP;
+	dat<<=1;
+	if(SDA_TM1650)
+	 dat++;
+	SCL_TM1650=0;
+	NOP;
+	NOP;
+	NOP;
+	NOP;
+	}
+	SDA_TM1650=0;			    //ACK信号
+	NOP;
+	NOP;
+	NOP;
+	SCL_TM1650=1;
+	NOP;
+	NOP;
+	NOP;
+	NOP;
+	SCL_TM1650=0;
+	NOP;
+	
+	return dat ;
+
+} 
+/*******************读按键命令************************/
+// unsigned char TM1650_Key(void) //替换函数
+unsigned char TM1650_read(void)
+{
+	unsigned char key;
+	TM1650_START();
+    write_8bit(0x49);//读按键指令	
+	key=read_8bit();
+	TM1650_STOP();
+	return key;
+} 
+/*****************发送命令信号***********************/
+// void TM1650_Display(u8 add,u8 dat) //替换函数
+void TM1650_send(unsigned char date1,unsigned char date2)
+{
+ 	TM1650_START();
+	write_8bit(date1);
+	write_8bit(date2);
+	TM1650_STOP();
+}
+/*****************************************/
+
 static void I2C_Start_TM1650(void)
 {          
 	SET_SDA_OUT_TM1650();
@@ -176,9 +310,4 @@ u8 TM1650_Init(u8 light, u8 dis)  //init tm1650
 	else
 		return 0;	//success
 }
- 
- 
- 
- 
- 
  
