@@ -1,7 +1,8 @@
 #include "TM1650.h"
 
 /*******************官方例程************************/
-#define NOP _nop_();_nop_();_nop_();_nop_();_nop_();_nop_();  //宏定义
+#define __NOP _nop_();_nop_();_nop_();_nop_();_nop_();_nop_();  //宏定义
+#define NOP __NOP; __NOP; __NOP; __NOP;
 
 /************ START信号*******************************/
 static void TM1650_START(void)
@@ -114,7 +115,7 @@ static unsigned char read_8bit(void)
 } 
 /*******************读按键命令************************/
 // unsigned char TM1650_Key(void) //替换函数
-unsigned char TM1650_read(void)
+unsigned char TM1650_Key(void)
 {
 	unsigned char key;
 	TM1650_START();
@@ -125,11 +126,11 @@ unsigned char TM1650_read(void)
 } 
 /*****************发送命令信号***********************/
 // void TM1650_Display(u8 add,u8 dat) //替换函数
-void TM1650_send(unsigned char date1,unsigned char date2)
+void TM1650_Display(u8 add,u8 dat) 
 {
  	TM1650_START();
-	write_8bit(date1);
-	write_8bit(date2);
+	write_8bit(add);
+	write_8bit(dat);
 	TM1650_STOP();
 }
 /*****************************************/
@@ -243,7 +244,7 @@ void IIC_Init_TM1650(void)
 	SDA_TM1650 = 1;
 }
 
-u8 TM1650_Key(void)	  //按键扫描
+u8 TM1650_Key2(void)	  //按键扫描
 {
 	u8 i = 0;
 	u8 rekey = 0;
@@ -269,7 +270,7 @@ u8 TM1650_Key(void)	  //按键扫描
 	return(rekey);
 }
  
-void TM1650_Display(u8 add,u8 dat) //数码管显示
+void TM1650_Display2(u8 add,u8 dat) //数码管显示
 {
 	//写显存必须从高地址开始写
 	I2C_Start_TM1650();

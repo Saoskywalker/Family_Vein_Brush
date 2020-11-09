@@ -785,7 +785,7 @@ const u16 storageAddress[] = {ADJUST_FLAG_ADDR, PRESSURE_LOW_ADDR, PRESSURE_MIDD
 void main(void)
 { 
   u8 DIG3_Dis_Temp = 0;
-  u8 TaskNumber = 1, KeyValue = 0;
+  u8 TaskNumber = 1, KeyValue = 0, KeyValueOld = 0, keyCnt = 0, keyTemp = 0;
   u8 KeyUp = 0, KeyT = 0;
   u8 mode = 0;
   u8 cnt250ms = 0, cnt500ms = 0, disStep = 0;
@@ -858,6 +858,25 @@ void main(void)
         case 1: //KEY GET AND DISPLAY
         {
           KeyValue = Key_Get();
+          if(keyTemp!=KeyValue)
+          {
+            // SendData_UART1(KeyValue);
+            keyCnt = 0;
+            keyTemp = KeyValue;
+            KeyValue = KeyValueOld;
+          }
+          else
+          {
+            if(++keyCnt>=3)
+            {
+              keyCnt = 3;
+              KeyValueOld = KeyValue;
+            }
+            else
+            {
+              KeyValue = KeyValueOld;
+            }
+          }
           TaskNumber++;
           break;
         }
