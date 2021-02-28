@@ -15,8 +15,8 @@ void Timer2_ISR(void) interrupt 5
         Flag1msCnt = 0;
         FlagState.ms1 = 1;
         BeeFunction();
-        HeatPWM(TempStage1, TempWork1);
-        HeatPWM2(TempStage2, TempWork2);
+        // HeatPWM(TempStage1, TempWork1);
+        // HeatPWM2(TempStage2, TempWork2);
     }
     if (++Flag2msCnt >= 20)
     {

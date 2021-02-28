@@ -482,7 +482,7 @@ void PressureProcess(u8 mode)
         {
           if(++cnt>=4)
           {
-            SendData_UART1(0X00);
+            SendData_UART0(0X00);
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
             if (cnt >= 4+20)
@@ -508,7 +508,7 @@ void PressureProcess(u8 mode)
         {
           if(++cnt>=4)
           {
-            SendData_UART1(0X00);
+            SendData_UART0(0X00);
             PUMPL_PIN = 0;
             PUMPR_PIN = 0;
             if (cnt >= 4+56)
@@ -807,14 +807,14 @@ void main(void)
   P11_PushPull_Mode; MOTOR1_PIN = 0;
   P12_PushPull_Mode; LAMP2_PIN = 0;
   P15_PushPull_Mode; SOUND_PIN = 0;
-  P06_PushPull_Mode; LAMP1_PIN = 0; 
-  P07_PushPull_Mode; CHANNEL1_PIN = 0;
+  // P06_PushPull_Mode; LAMP1_PIN = 0; 
+  // P07_PushPull_Mode; CHANNEL1_PIN = 0;
 
   #ifndef DEBUG
   IWDG_Configuration(); //Open IWDG
   #endif
 
-  Uart1Init(115200);
+  Uart0Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
   set_EA;//Open main interrupt
 
@@ -860,7 +860,7 @@ void main(void)
           KeyValue = Key_Get();
           if(keyTemp!=KeyValue)
           {
-            // SendData_UART1(KeyValue);
+            // SendData_UART0(KeyValue);
             keyCnt = 0;
             keyTemp = KeyValue;
             KeyValue = KeyValueOld;
@@ -1027,12 +1027,12 @@ void main(void)
                   }
 
                   // SMG_One_Display(DIG3, DIG3_Dis);
-                  // SendData_UART1(Pressure >> 8);
-                  // SendData_UART1((u8)Pressure);
-                  // SendData_UART1(tempValue >> 8);
-                  // SendData_UART1((u8)tempValue);
-                  // SendData_UART1(0XF0);
-                  SendData_UART1(0XF0);
+                  // SendData_UART0(Pressure >> 8);
+                  // SendData_UART0((u8)Pressure);
+                  // SendData_UART0(tempValue >> 8);
+                  // SendData_UART0((u8)tempValue);
+                  // SendData_UART0(0XF0);
+                  SendData_UART0(0XF0);
                 }
               }
               else
@@ -1163,12 +1163,12 @@ void main(void)
               Pressure = AD1Sample(0);
               Temperature2 = AD1Sample(1);
               Temperature1 = AD1Sample(4);
-              SendData_UART1(Pressure >> 8);
-              SendData_UART1((u8)Pressure);
-              // SendData_UART1(Temperature1 >> 8);
-              // SendData_UART1((u8)Temperature1);
-              // SendData_UART1(Temperature2 >> 8);
-              // SendData_UART1((u8)Temperature2);
+              SendData_UART0(Pressure >> 8);
+              SendData_UART0((u8)Pressure);
+              // SendData_UART0(Temperature1 >> 8);
+              // SendData_UART0((u8)Temperature1);
+              // SendData_UART0(Temperature2 >> 8);
+              // SendData_UART0((u8)Temperature2);
               // if (Ntc1ErrorFlag)
               // {
               //   SMG_One_Display(DIG1, DIG_Dis[1]);
