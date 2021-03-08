@@ -52,6 +52,7 @@ void BeeFunction(void);
 #define PUMPR_PIN P00
 #define CHANNEL1_PIN P07
 #define SOUND_PIN P15
+#define AIR_SENSOR_LED_PIN P12
 
 #define REC_SEND_485 GPIOD_OUT->ODR3
 #define REC_485 0

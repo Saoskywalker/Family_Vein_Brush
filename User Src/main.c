@@ -15,7 +15,7 @@ History:
 #include "UserBaseLib.h"
 #include "delay.h"
 #include "TM1650.h"
-//#include <stdio.h>
+#include <stdio.h>
 // #include "UART_Frame.h"
 
 /* Private defines -----------------------------------------------------------*/
@@ -769,6 +769,32 @@ void shockRun()
   }
 }
 
+#define samplingTime 20//等待LED开启的时间是280μs
+#define deltaTime 3//整个脉冲持续时间为320μs。因此，我们还需再等待40μs
+#define sleepTime 780
+void dustDensityMeasure(void)
+{
+  u16 voMeasured = 0;
+  float calcVoltage = 0;
+  float dustDensity = 0;
+
+  AIR_SENSOR_LED_PIN = 0;    //开启内部LED
+  delay_us(samplingTime);    // 开启LED后的280us的等待时间
+  voMeasured = AD1Sample(4); // 读取模拟值
+  delay_us(deltaTime);       // 40us等待时间
+  AIR_SENSOR_LED_PIN = 1;    // 关闭LED
+  delay_us(sleepTime);       //参照datasheet里, 一个检测周期为10ms
+  // 0 - 5V mapped to 0 - 1023 integer values
+  // recover voltage
+  calcVoltage = voMeasured * (5.0 / 4096.0);    //将模拟值转换为电压值
+  dustDensity = 0.17 * calcVoltage - 0.1;       //将电压值转换为粉尘密度输出单位
+                                                // 最终浓度值，输出单位： 毫克/立方米
+  printf("voMeasured: %d\r\n", voMeasured);
+  printf("calcVoltage: %f\r\n", calcVoltage);
+  printf("dustDensity: %f\r\n", dustDensity);
+  delay_ms(500);
+}
+
 /* #define DisTemp() {SMG_One_Display(DIG1, DIG_Dis[(TempIntensity + 29) % 10]); \
                   SMG_One_Display(DIG2, DIG_Dis[(TempIntensity + 29) / 10]); \
                   disShift = 0;} */
@@ -805,14 +831,14 @@ void main(void)
   P04_PushPull_Mode; OLENOOL_PIN = 0; 
   P10_PushPull_Mode; PUMPL_PIN = 0;
   P11_PushPull_Mode; MOTOR1_PIN = 0;
-  P12_PushPull_Mode; LAMP2_PIN = 0;
+  P12_PushPull_Mode; AIR_SENSOR_LED_PIN = 1; //LAMP2_PIN = 0;
   P15_PushPull_Mode; SOUND_PIN = 0;
   // P06_PushPull_Mode; LAMP1_PIN = 0; 
   // P07_PushPull_Mode; CHANNEL1_PIN = 0;
 
-  #ifndef DEBUG
-  IWDG_Configuration(); //Open IWDG
-  #endif
+  // #ifndef DEBUG
+  // IWDG_Configuration(); //Open IWDG
+  // #endif
 
   Uart0Init(115200);
   Tim2_Time_Upmode_conf(TIMER_DIV4_VALUE_100us);  //100us      
@@ -822,42 +848,42 @@ void main(void)
   // PWM_Init(0x7CF, 0);
   AD1Init();
   TM1650_Init(0, 1);
-
+SendData_UART0(0XFF);
   FlagState.work = 0;
 
   //read adjust value
-  if (Read_APROM_BYTE((unsigned int code *)storageAddress[0])==0X0E)
-  {
-    for (kkk = 1; kkk <= 3; kkk++)
-    {
-      tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[kkk] + 1)) << 8) +
-                  Read_APROM_BYTE((unsigned int code *)storageAddress[kkk]);
-      if(tempValue<=MAX_PRESSURE)
-        PressureTable[kkk] = tempValue;
-      else
-        storageError = 1;
-    }
-    kkk = 0;
-  }
-  else
-  {
-    storageError = 1;
-  }
+  // if (Read_APROM_BYTE((unsigned int code *)storageAddress[0])==0X0E)
+  // {
+  //   for (kkk = 1; kkk <= 3; kkk++)
+  //   {
+  //     tempValue = (Read_APROM_BYTE((unsigned int code *)(storageAddress[kkk] + 1)) << 8) +
+  //                 Read_APROM_BYTE((unsigned int code *)storageAddress[kkk]);
+  //     if(tempValue<=MAX_PRESSURE)
+  //       PressureTable[kkk] = tempValue;
+  //     else
+  //       storageError = 1;
+  //   }
+  //   kkk = 0;
+  // }
+  // else
+  // {
+  //   storageError = 1;
+  // }
 
   while (1)
   {
-#ifndef DEBUG
-    IWDG_Feed; //Clear IWDG cnt
-#endif
-
-    if (FlagState.ms2)
+// #ifndef DEBUG
+//     IWDG_Feed; //Clear IWDG cnt
+// #endif
+    dustDensityMeasure();
+    if (0)
     {
       FlagState.ms2 = 0;
       switch (TaskNumber)
       {
         case 1: //KEY GET AND DISPLAY
         {
-          KeyValue = Key_Get();
+          KeyValue = 0; //Key_Get();
           if(keyTemp!=KeyValue)
           {
             // SendData_UART0(KeyValue);
@@ -885,15 +911,15 @@ void main(void)
           disStep++;
           if(disStep==1)
           {
-            SMG_One_Display(DIG1, DIG1_Dis);
+            // SMG_One_Display(DIG1, DIG1_Dis);
           }
           else if(disStep==2)
           {
-            SMG_One_Display(DIG2, DIG2_Dis);
+            // SMG_One_Display(DIG2, DIG2_Dis);
           }
           else 
           {
-            SMG_One_Display(DIG3, DIG3_Dis);
+            // SMG_One_Display(DIG3, DIG3_Dis);
             disStep = 0;
           }
           TaskNumber++;
@@ -1032,7 +1058,7 @@ void main(void)
                   // SendData_UART0(tempValue >> 8);
                   // SendData_UART0((u8)tempValue);
                   // SendData_UART0(0XF0);
-                  SendData_UART0(0XF0);
+                  // SendData_UART0(0XF0);
                 }
               }
               else
@@ -1163,8 +1189,8 @@ void main(void)
               Pressure = AD1Sample(0);
               Temperature2 = AD1Sample(1);
               Temperature1 = AD1Sample(4);
-              SendData_UART0(Pressure >> 8);
-              SendData_UART0((u8)Pressure);
+              // SendData_UART0(Pressure >> 8);
+              // SendData_UART0((u8)Pressure);
               // SendData_UART0(Temperature1 >> 8);
               // SendData_UART0((u8)Temperature1);
               // SendData_UART0(Temperature2 >> 8);
@@ -1201,11 +1227,11 @@ void main(void)
               // SMG_One_Display(DIG2, DIG_Dis[(Pressure>>8)]); //ten
               DIG1_Dis = DIG_Dis[(Pressure>>4)&0X0F];
               DIG2_Dis = DIG_Dis[(Pressure>>8)];
-              PressureAdjust(mode);
+              // PressureAdjust(mode);
             }
             else
             {
-              PressureProcess(mode);
+              // PressureProcess(mode);
             }
           }
           TaskNumber++;
@@ -1217,7 +1243,7 @@ void main(void)
           {
             if (++cnt500ms >= 50)
               cnt500ms = 0;
-            TM1650_Display(0X48, 0X01); //循环发, 避免一次发送通信接收错误
+            // TM1650_Display(0X48, 0X01); //循环发, 避免一次发送通信接收错误
           }
 
           if(FlagState.work)
